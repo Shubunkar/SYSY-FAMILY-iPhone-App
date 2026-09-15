@@ -1,3 +1,4 @@
+```yaml
 name: Build SYSY FAMILY V63 IPA
 
 on:
@@ -40,7 +41,7 @@ jobs:
 
           APP=$(find build/DerivedData/Build/Products/Release-iphoneos \
             -maxdepth 1 \
-            -name '*.app' \
+            -name "*.app" \
             -type d | head -1)
 
           test -n "$APP"
@@ -57,3 +58,4 @@ jobs:
           name: SYSY-FAMILY-V63-IPA
           path: build/SYSY_FAMILY_V63_unsigned.ipa
           retention-days: 7
+```
