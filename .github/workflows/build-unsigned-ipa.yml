@@ -1,4 +1,4 @@
-```yaml
+
 name: Build SYSY FAMILY V63 IPA
 
 on:
@@ -58,4 +58,4 @@ jobs:
           name: SYSY-FAMILY-V63-IPA
           path: build/SYSY_FAMILY_V63_unsigned.ipa
           retention-days: 7
-```
+
