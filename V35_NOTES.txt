@@ -1,0 +1,9 @@
+SYSY FAMILY iPhone App V35
+
+- Based on V34 master.
+- Backup export version updated to V35.
+- Added persistent “last backup” timestamp so the Backup screen shows when the latest export was created.
+- Backup filename updated to SYSY_FAMILY_Backup_v35.json.
+- Existing V1-V34 backup restore compatibility remains unchanged.
+- V34 security-scoped Files picker handling and checksum validation retained.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

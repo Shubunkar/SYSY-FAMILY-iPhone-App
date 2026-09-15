@@ -1,0 +1,8 @@
+SYSY FAMILY iPhone App - V40
+
+V40 quotation workflow improvements:
+- Added Project / Site Address and Site Note fields to new quotation creation.
+- New quotations now persist trimmed customer/phone/project/site text.
+- Added a confirmation alert before deleting a quotation, reducing accidental deletion.
+- Preserved V39 live quotation list, search, edit workflow, quotation IDs/numbers/creation dates and validation.
+- Preserved V38 automatic quotation numbering and backup checksum validation.

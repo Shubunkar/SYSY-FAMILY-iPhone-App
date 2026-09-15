@@ -1,0 +1,11 @@
+SYSY FAMILY iPhone App - V53
+
+Customer history accounting consistency:
+- Fixed CustomerHistoryView so total Paid includes quotation advances, matching V51/V52 account calculations.
+- Added separate Quotation Advance and Payment Records rows to Customer History for transparent collection breakdown.
+- Fixed Customer History payment list to show only the selected customer's payment records instead of all device payments.
+- Preserved V52 advance-aware due calculation, payment validation, quotation filtering, backup checksum/restore validation and backward-compatible data decoding.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

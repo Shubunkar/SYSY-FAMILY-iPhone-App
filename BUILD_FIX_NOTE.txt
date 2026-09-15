@@ -1,0 +1,5 @@
+V63 GitHub build fix
+- Removed dependency on a shared Xcode scheme in GitHub Actions by building the V63 target directly.
+- Enabled generated Info.plist for the target.
+- Added Assets.xcassets to the Resources build phase.
+- No app features or V63 business logic changed.

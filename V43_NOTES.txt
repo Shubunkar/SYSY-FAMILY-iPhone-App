@@ -1,0 +1,8 @@
+SYSY FAMILY iPhone App - V43
+
+V43 quotation workflow improvements:
+- Added one-tap status changing directly from each quotation row using a Status menu.
+- Status changes are persisted immediately through the existing AppDataStore.
+- Added distinct status colors and status dots for faster visual recognition.
+- Preserved V42 status filters, live counts, search, editing, PDF status and backup compatibility.
+- No existing quotation data is removed or reset.

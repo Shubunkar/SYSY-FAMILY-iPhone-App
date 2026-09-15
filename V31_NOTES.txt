@@ -1,0 +1,7 @@
+SYSY FAMILY V31
+
+- Backup export metadata and filename updated to V31.
+- Backup Restore now validates stored amounts/rates and rejects obviously corrupt or negative financial data before replacing current local data.
+- Backup status now distinguishes success from restore validation errors.
+- Based on V30 master.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

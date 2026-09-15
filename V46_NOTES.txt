@@ -1,0 +1,6 @@
+SYSY FAMILY iPhone App - V46
+
+Quotation overview improvement:
+- Added a live summary row above the quotation list showing the number of currently filtered quotations and their combined grand total.
+- The summary updates with search text and status filters, making it easy to see the value of the current quotation list.
+- Preserved V45 sorting, V44 duplicate quotation, status editing/counts, PDF preview/share, and backup compatibility.

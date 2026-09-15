@@ -1,0 +1,10 @@
+SYSY FAMILY iPhone App V28
+
+Based on V27 master source.
+
+Changes:
+- Dashboard now uses centralized totalSales/totalCollected/totalDue calculations from AppDataStore.
+- Added current-month Collection to the business summary alongside current-month Sales.
+- Reduced duplicated aggregate calculations in the Dashboard, improving consistency with the Payments/History totals.
+- Kept existing persistence, quotation, payment, PDF, customer, and history workflows intact.
+- No Xcode/iPhone build test was performed because a Mac is unavailable.

@@ -1,0 +1,12 @@
+SYSY FAMILY iPhone App - V49
+
+Backup metadata consistency fix:
+- Newly exported backups now store app version "49".
+- Backup filename is now SYSY_FAMILY_Backup_v49.json.
+- Backup screen text now identifies the current V49 backup format.
+- Existing checksum validation, restore validation, security-scoped file handling and backward-compatible decoding are preserved.
+- V48 quotation filtering/count improvements are preserved.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

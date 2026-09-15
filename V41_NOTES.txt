@@ -1,0 +1,9 @@
+SYSY FAMILY iPhone App - V41
+
+V41 quotation workflow improvements:
+- Added a persistent quotation status workflow: Draft, Sent, Confirmed, Production, Installed and Completed.
+- Added status selection when creating and editing quotations.
+- Added the current status to the quotation list and quotation preview.
+- Added quotation status to generated PDF output.
+- Preserved V40 project/site details, safe deletion confirmation, live quotation search/edit, automatic numbering and backup checksum validation.
+- Added backward-compatible decoding so existing quotations without a saved status open as Draft.

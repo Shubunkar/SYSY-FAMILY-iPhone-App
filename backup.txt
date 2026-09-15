@@ -1,0 +1,121 @@
+            Spacer()
+            Text("\(value)")
+                .bold()
+                .foregroundStyle(Color.sysyGold)
+        }
+    }
+}
+
+struct BackupView: View {
+    @EnvironmentObject var store: AppDataStore
+    @State private var showImporter = false
+    @State private var showExporter = false
+    @State private var backupDocument: BackupDocument?
+    @State private var status = ""
+    @State private var statusIsError = false
+    @State private var pendingRestore: BackupData?
+    @State private var showRestoreConfirmation = false
+    @AppStorage("SYSY_FAMILY_LAST_BACKUP_DATE") private var lastBackupDate: Double = 0
+
+    var body: some View {
+        List {
+            Section("Backup") {
+                Text("Customer: \(store.data.customers.count) • Quotation: \(store.data.quotations.count)")
+                    .font(.subheadline)
+                Text("Payment: \(store.data.payments.count) • Rate: \(store.data.rates.count) • Measurement: \(store.data.measurements.count)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Label("V58 backup-এ checksum + restore validation থাকবে", systemImage: "checkmark.shield.fill")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+                Button {
+                    let now = Date()
+                    let payload = BackupData(exportedAt: now, appName: "SYSY FAMILY", version: "58", appData: store.data)
+                    guard let data = try? JSONEncoder().encode(payload) else { return }
+                    backupDocument = BackupDocument(data: data)
+                    showExporter = true
+                } label: {
+                    Label("সম্পূর্ণ Backup File তৈরি করুন", systemImage: "arrow.up.doc")
+                }
+                if lastBackupDate > 0 {
+                    Label("শেষ Backup: \(Date(timeIntervalSince1970: lastBackupDate).formatted(date: .abbreviated, time: .shortened))", systemImage: "clock.arrow.circlepath")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Button { showImporter = true } label: {
+                    Label("Backup Restore করুন", systemImage: "arrow.down.doc")
+                }
+            }
+            if !status.isEmpty {
+                Section { Label(status, systemImage: statusIsError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill").foregroundStyle(statusIsError ? .red : .green) }
+            }
+            Section("Backup-এ থাকবে") {
+                Label("Customer + Project/Site তথ্য", systemImage: "person.2")
+                Label("Measurements + Rate List", systemImage: "ruler")
+                Label("Quotation + Payment records", systemImage: "doc.text")
+            }
+        }
+        .navigationTitle("Backup")
+        .alert("Backup Restore নিশ্চিত করুন", isPresented: $showRestoreConfirmation) {
+            Button("Restore করুন", role: .destructive) {
+                guard let payload = pendingRestore else { return }
+                store.data = payload.appData
+                pendingRestore = nil
+                statusIsError = false
+                status = "Backup সফলভাবে Restore হয়েছে (V\(payload.version)) — data validation passed"
+            }
+            Button("Cancel", role: .cancel) {
+                pendingRestore = nil
+                statusIsError = false
+                status = "Restore বাতিল করা হয়েছে"
+            }
+        } message: {
+            if let payload = pendingRestore {
+                Text("এই backup restore করলে বর্তমান Customer, Quotation, Payment, Rate ও Measurement data replace হবে। Backup: V\(payload.version) • Customer: \(payload.appData.customers.count) • Quotation: \(payload.appData.quotations.count) • Payment: \(payload.appData.payments.count)")
+            } else {
+                Text("বর্তমান data replace হবে।")
+            }
+        }
+        .fileExporter(isPresented: $showExporter, document: backupDocument ?? BackupDocument(data: Data()), contentType: .json, defaultFilename: "SYSY_FAMILY_Backup_v58.json") { result in
+            if case .success = result { statusIsError = false; lastBackupDate = Date().timeIntervalSince1970
+                status = "Backup সফলভাবে তৈরি হয়েছে (V58)" }
+        }
+        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
+            guard case .success(let urls) = result, let url = urls.first else {
+                statusIsError = true
+                status = "Backup file নির্বাচন করা হয়নি"
+                return
+            }
+
+            let didStartSecurityScope = url.startAccessingSecurityScopedResource()
+            defer {
+                if didStartSecurityScope { url.stopAccessingSecurityScopedResource() }
+            }
+
+            guard let data = try? Data(contentsOf: url),
+                  let payload = try? JSONDecoder().decode(BackupData.self, from: data) else {
+                statusIsError = true
+                status = "Backup file সঠিক নয় বা পড়া যায়নি"
+                return
+            }
+            if let validationError = payload.restoreValidationMessage {
+                statusIsError = true
+                status = validationError + " — Restore করা হয়নি"
+                return
+            }
+            pendingRestore = payload
+            showRestoreConfirmation = true
+        }
+    }
+}
+
+struct BackupDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.json] }
+    var data: Data
+    init(data: Data) { self.data = data }
+    init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
+}
+
+struct PaymentsView: View {
+    @EnvironmentObject var store: AppDataStore

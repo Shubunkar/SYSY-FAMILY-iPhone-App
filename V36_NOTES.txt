@@ -1,0 +1,10 @@
+SYSY FAMILY iPhone App V36
+
+- Based on V35 master.
+- Backup export version updated to V36.
+- Backup filename updated to SYSY_FAMILY_Backup_v36.json.
+- Added centralized restore validation for app identity, version, export timestamp, checksum, and persisted data sanity.
+- Restore now performs all validation before showing the destructive confirmation, so current data is never replaced by an invalid backup.
+- Existing V1-V35 backup decoding/checksum compatibility remains unchanged.
+- V35 last-backup timestamp UI retained.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

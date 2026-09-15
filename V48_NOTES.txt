@@ -1,0 +1,11 @@
+SYSY FAMILY iPhone App - V48
+
+Quotation filter-count improvement:
+- Status filter chips now show counts that respect the active quotation search and date filter.
+- The “সব” count now represents the total quotations matching the active search/date filters before a status is selected.
+- Status counts intentionally ignore the currently selected status, making it easier to switch between statuses without misleading zero counts.
+- Preserved V47 date filters, live filtered quotation count/grand total, V45 sorting, V44 duplicate quotation, editing, PDF preview/share and backup compatibility.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

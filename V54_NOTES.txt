@@ -1,0 +1,11 @@
+SYSY FAMILY iPhone App - V54
+
+Monthly collection consistency:
+- Fixed BusinessStore.monthlyCollection so the current month includes quotation advances as well as payment records.
+- Quotation advances are dated by the quotation createdAt because the existing model does not store a separate advance date.
+- Added an explicit “এই মাসের Collection” row to the হিসাব screen so the dashboard and payment screen use the same monthly collection figure.
+- Preserved V53 customer history, advance-aware due calculation, payment validation, quotation filtering, backup checksum/restore validation and backward-compatible decoding.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

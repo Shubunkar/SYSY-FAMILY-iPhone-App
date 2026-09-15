@@ -1,0 +1,13 @@
+SYSY FAMILY iPhone App - V52
+
+Payment screen consistency and collection summary:
+- Fixed the main হিসাব screen so মোট পাওনা uses the same V51 advance-aware due calculation as the rest of the app.
+- Added a Collection Summary showing Quotation Advance, Payment Records and Total Collected separately.
+- Payment Tracking total collection now includes quotation advances as well as payment records.
+- Existing V51 customer due protection and payment validation are preserved.
+- Backup export is now labeled V52 (filename and metadata).
+- Existing checksum/restore validation and backward-compatible backup decoding are preserved.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

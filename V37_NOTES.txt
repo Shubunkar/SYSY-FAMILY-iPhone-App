@@ -1,0 +1,9 @@
+SYSY FAMILY iPhone App - V37
+
+V37 focuses on safer customer management:
+- Added duplicate-customer detection by normalized name or phone digits when creating a customer.
+- Added an in-form duplicate warning before a new customer is saved.
+- Added delete confirmation to prevent accidental customer deletion.
+- Delete warning explicitly explains that related quotation, payment and measurement history is removed together.
+- Existing customer search, edit flow and account history remain intact.
+- V36 backup/restore validation and checksum support are preserved.

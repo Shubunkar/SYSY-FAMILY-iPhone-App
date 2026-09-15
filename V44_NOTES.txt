@@ -1,0 +1,8 @@
+SYSY FAMILY iPhone App - V44
+
+V44 quotation productivity improvements:
+- Added one-swipe Duplicate action to quotation rows.
+- Duplicates customer/site/item/discount details while generating a fresh quotation number.
+- New duplicate always starts as Draft and resets advance/payment progress to zero.
+- Item IDs are regenerated so the duplicate is independent from the original.
+- Existing V43 search, filters, status controls, editing, PDF preview and backup compatibility are preserved.

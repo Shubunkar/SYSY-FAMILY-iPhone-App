@@ -1,0 +1,7 @@
+SYSY FAMILY iPhone App - V29
+- Payment Tracking now sorts payments newest-first.
+- Customer due is shown while entering a payment.
+- Payment validation blocks a payment above the known outstanding amount when the customer has quotations.
+- Payment/customer/note input is trimmed before saving.
+- Delete uses stable payment IDs after sorting.
+- Xcode/iPhone build not executed because no Mac/Xcode environment is available here.

@@ -1,0 +1,8 @@
+SYSY FAMILY V33
+
+- Added SHA-256 checksum to newly exported backups to detect accidental/corrupt/tampered backup data before restore.
+- Restore now rejects a backup when its checksum does not match the stored app data.
+- Older V1-V32 backups without a checksum remain backward compatible.
+- Backup export filename/metadata updated to V33.
+- Based on V32 master.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

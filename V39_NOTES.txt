@@ -1,0 +1,10 @@
+SYSY FAMILY iPhone App - V39
+
+V39 quotation/customer workflow improvements:
+- Replaced the static quotation list with live persisted quotations.
+- Added quotation search by number, customer name and phone.
+- Added quotation Edit workflow while preserving quotation ID, number and creation date.
+- Added safe validation so discount cannot exceed subtotal and advance cannot exceed grand total during quotation editing.
+- Added quotation delete action.
+- Preserved project address/site note during quotation edits.
+- Preserved V38 automatic quotation numbering, backup checksum validation, duplicate customer protection and customer delete safeguards.

@@ -1,0 +1,8 @@
+SYSY FAMILY V32
+
+- Backup export metadata and filename updated to V32.
+- Restore is now two-step: the selected backup is validated first, then a confirmation alert is shown before current data is replaced.
+- Restore confirmation shows backup version and record counts so accidental overwrite is less likely.
+- Canceling a restore leaves current data unchanged.
+- Based on V31 master.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

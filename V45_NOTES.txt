@@ -1,0 +1,7 @@
+SYSY FAMILY iPhone App - V45
+
+Quotation organization improvements:
+- Added quotation sorting controls: newest, oldest, highest amount, lowest amount, and customer A-Z.
+- Sorting works together with the existing quotation search and status filters.
+- Added a dedicated sort button beside the New Quotation button.
+- Preserved V44 duplicate, status editing, status filters/counts, PDF preview and backup compatibility.

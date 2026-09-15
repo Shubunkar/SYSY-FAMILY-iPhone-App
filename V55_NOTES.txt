@@ -1,0 +1,11 @@
+SYSY FAMILY iPhone App - V55
+
+AppDataStore accounting/build consistency:
+- Fixed the V54 dashboard and হিসাব views to use accounting properties on the actual AppDataStore environment object.
+- Added totalSales, totalAdvanceCollected, totalCollected, totalDue, monthlySales and monthlyCollection to AppDataStore.
+- Preserved V54 monthly collection logic: current-month quotation advances use quotation createdAt, while payment records use payment date.
+- Preserved V53 customer history, advance-aware due calculation, payment validation, quotation filtering, backup checksum/restore validation and backward-compatible decoding.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

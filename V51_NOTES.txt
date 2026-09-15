@@ -1,0 +1,13 @@
+SYSY FAMILY iPhone App - V51
+
+Payment accounting fix:
+- Quotation advance is now included in total collected/paid amounts.
+- Global dashboard due now subtracts quotation advances as well as separate payment records.
+- Customer account summary now separates Quotation Advance and Payment Records and combines them into total paid.
+- New payment entry now subtracts existing quotation advances from the customer's due amount, preventing double-collection against an already recorded advance.
+- Existing V50 backup checksum, restore validation, security-scoped file handling and versioned backup export are preserved.
+- Backup export is now labeled V51 (filename and metadata).
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

@@ -1,0 +1,12 @@
+SYSY FAMILY iPhone App - V58
+
+Backup version consistency:
+- Fixed the backup screen still showing/exporting V52 while the project had advanced to V57.
+- Backup JSON metadata now records version 58.
+- Backup exporter default filename is SYSY_FAMILY_Backup_v58.json.
+- Backup UI label and success message now correctly show V58.
+- Preserved V57 advance-date accounting and all previous safeguards/backward compatibility.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

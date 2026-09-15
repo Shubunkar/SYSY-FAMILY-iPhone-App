@@ -1,0 +1,10 @@
+SYSY FAMILY iPhone App - V38
+
+V38 focuses on safer and cleaner quotation creation:
+- Added automatic date-based quotation numbering (QT-YYYYMMDD-001 sequence).
+- Prevented discount from exceeding quotation subtotal before preview/save.
+- Prevented advance from exceeding grand total before preview/save.
+- Trimmed/validated customer name before quotation preview.
+- Balance calculation now uses the effective advance amount.
+- Backup export/restore UI and filename are updated to V38 while retaining checksum validation.
+- V37 duplicate-customer detection and delete confirmation remain intact.

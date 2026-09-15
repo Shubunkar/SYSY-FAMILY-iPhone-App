@@ -1,0 +1,14 @@
+SYSY FAMILY iPhone App - V50
+
+Backup reliability polish:
+- Fixed stale V38 success message; successful exports now report V50.
+- Backup screen security/validation note now identifies V50.
+- Backup export filename is now SYSY_FAMILY_Backup_v50.json.
+- Corrected the exported BackupData metadata to store version "50" (the UI already identified V50).
+- Last Backup timestamp is now saved only after the file exporter reports success, avoiding false timestamps when export is cancelled or fails.
+- Existing checksum validation, restore validation, security-scoped file handling and backward-compatible decoding are preserved.
+- V49 backup metadata consistency fix and V48 quotation filtering/count improvements are preserved.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

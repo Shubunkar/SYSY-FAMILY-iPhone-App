@@ -1,0 +1,3 @@
+SYSY FAMILY iPhone App V27
+Package prepared from V26 master source.
+No Xcode build/test was performed because a Mac is unavailable.

@@ -1,0 +1,11 @@
+SYSY FAMILY iPhone App - V47
+
+Quotation filtering improvement:
+- Added date filters: All dates, Today, Last 7 days and Last 30 days.
+- Date filtering works together with quotation search, status filters and sorting.
+- The live quotation count and combined grand total now reflect all active filters.
+- Preserved V46 quotation summary, V45 sorting, V44 duplicate, status editing/counts, PDF preview/share and backup compatibility.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

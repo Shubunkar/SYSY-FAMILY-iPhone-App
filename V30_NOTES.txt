@@ -1,0 +1,8 @@
+SYSY FAMILY V30
+
+- Backup export metadata updated to V30.
+- Backup filename updated to SYSY_FAMILY_Backup_v30.json.
+- Restore now validates that the backup belongs to SYSY FAMILY before replacing local data.
+- Restore status shows the source backup version.
+- Based on V29 master.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

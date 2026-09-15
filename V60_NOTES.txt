@@ -1,0 +1,13 @@
+SYSY FAMILY iPhone App - V60
+
+Final planned polish and release consistency:
+- Updated the Backup screen/export metadata from V58 to V60.
+- Backup JSON metadata now records version 60.
+- Backup exporter default filename is SYSY_FAMILY_Backup_v60.json.
+- Backup UI label and success message now correctly show V60.
+- Clarified the monthly Collection documentation: current advances use persisted advanceDate, while older backups fall back to createdAt.
+- Preserved checksum/restore validation, backward compatibility, accounting totals, customer history, quotation filtering, payment safeguards, and V57 advance-date accounting.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

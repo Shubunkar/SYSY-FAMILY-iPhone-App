@@ -1,0 +1,10 @@
+SYSY FAMILY iPhone App - V63
+
+Backup/version consistency polish:
+- Backup export metadata version is now V63 (previously left at V61).
+- Backup screen messaging and default export filename now consistently use V63.
+- Preserved V62 rollback/undo restore safeguard, checksum validation, restore validation, and accounting behavior.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

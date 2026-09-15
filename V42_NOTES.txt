@@ -1,0 +1,9 @@
+SYSY FAMILY iPhone App - V42
+
+V42 quotation management improvements:
+- Added a fast status filter bar to the quotation list.
+- Filters include All plus Draft, Sent, Confirmed, Production, Installed and Completed.
+- Each status filter shows its live quotation count.
+- Status filtering works together with quotation/customer/phone search.
+- Tapping the active status filter clears it for quick switching.
+- Preserved V41 persistent quotation status workflow, PDF status, editing, deletion confirmation, backup checksum validation and backward compatibility.

@@ -1,0 +1,9 @@
+SYSY FAMILY iPhone App V34
+
+- Backup export metadata and filename updated to V34.
+- Backup Restore now correctly accesses security-scoped files selected from the iOS Files picker before reading them, improving restore reliability for external/iCloud locations.
+- Restore now reports a clearer error when a file cannot be selected or read.
+- Backup screen now explicitly shows that V34 backups include the integrity checksum introduced in V33.
+- Existing V1-V32 checksum-less backups remain backward compatible.
+- Based on V33 master.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.

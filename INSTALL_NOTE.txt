@@ -1,0 +1,21 @@
+SYSY FAMILY iPhone App - V63 Handover
+
+This handover contains the current V63 source package only. No further version has been added.
+
+Current V63 work:
+- Backup export metadata is V63.
+- Backup UI message is V63.
+- Default backup filename is SYSY_FAMILY_Backup_v63.json.
+- V62 restore rollback/undo safeguard is preserved.
+- Checksum and restore validation are preserved.
+- Existing accounting behavior is preserved.
+
+IMPORTANT iPhone installation:
+This package is an Xcode iPhone project. A Mac with Xcode is required to build/sign it into an installable IPA using the normal Apple toolchain.
+
+The project was not built here because this environment has no Mac/Xcode.
+
+Free/no-paid-Developer route after an IPA is available:
+A Windows PC can use a free Apple-ID signing/sideload route such as AltStore/AltServer, subject to Apple's current signing limits. This still requires an IPA first; this source ZIP alone cannot be installed directly on an iPhone.
+
+No Apple Developer Program payment is included or required for this source handover.

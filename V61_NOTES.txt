@@ -1,0 +1,12 @@
+SYSY FAMILY iPhone App - V61
+
+Accounting and restore-validation polish:
+- Fixed AppDataStore monthly Collection to use persisted advanceDate, with createdAt fallback for older backups.
+- Kept separately recorded payment dates in monthly Collection.
+- Strengthened restore validation: quotation lines must have non-empty titles; measurements must have positive width, height, and quantity.
+- Updated Backup export metadata, default filename, and success message to V61.
+- Preserved checksum validation, backward-compatible decoding, customer history, quotation filtering, payment safeguards, and V57+ advance-date accounting.
+
+Build note:
+- Source package prepared and ZIP integrity verified.
+- Xcode/iPhone build was not run because no Mac/Xcode environment is available.
