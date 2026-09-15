@@ -11,18 +11,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check project files
+      - name: Check project file
         run: |
           set -e
-          echo "Checking repository..."
+          echo "Checking project.pbxproj..."
           ls -la
-          echo "Finding project.pbxproj..."
-          find . -name "project.pbxproj" -print
           test -f "project.pbxproj"
 
       - name: Prepare Xcode project
         run: |
           set -e
+          rm -rf "SYSY FAMILY.xcodeproj"
           mkdir -p "SYSY FAMILY.xcodeproj"
           cp "project.pbxproj" "SYSY FAMILY.xcodeproj/project.pbxproj"
 
