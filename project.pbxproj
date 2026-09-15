@@ -1,0 +1,186 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AAAABBBBCCCC000000000001 /* SYSY_FAMILYApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000101 /* SYSY_FAMILYApp.swift */; };
+		AAAABBBBCCCC000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000102 /* Models.swift */; };
+		AAAABBBBCCCC000000000003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000103 /* Theme.swift */; };
+		AAAABBBBCCCC000000000004 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000104 /* MainTabView.swift */; };
+AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000105 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AAAABBBBCCCC000000000100 /* SYSY FAMILY.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SYSY FAMILY.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAAABBBBCCCC000000000101 /* SYSY_FAMILYApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SYSY_FAMILYApp.swift; sourceTree = "<group>"; };
+		AAAABBBBCCCC000000000102 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AAAABBBBCCCC000000000103 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AAAABBBBCCCC000000000104 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		AAAABBBBCCCC000000000105 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AAAABBBBCCCC000000000200 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AAAABBBBCCCC000000000300 = {
+			isa = PBXGroup;
+			children = (
+				AAAABBBBCCCC000000000301 /* SYSY FAMILY */,
+				AAAABBBBCCCC000000000302 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AAAABBBBCCCC000000000301 /* SYSY FAMILY */ = {
+			isa = PBXGroup;
+			children = (
+				AAAABBBBCCCC000000000101 /* SYSY_FAMILYApp.swift */,
+				AAAABBBBCCCC000000000102 /* Models.swift */,
+				AAAABBBBCCCC000000000103 /* Theme.swift */,
+				AAAABBBBCCCC000000000104 /* MainTabView.swift */,
+				AAAABBBBCCCC000000000105 /* Assets.xcassets */,
+			);
+			path = "SYSY FAMILY";
+			sourceTree = "<group>";
+		};
+		AAAABBBBCCCC000000000302 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AAAABBBBCCCC000000000100 /* SYSY FAMILY.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AAAABBBBCCCC000000000500 /* SYSY FAMILY */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAAABBBBCCCC000000000700 /* Build configuration list for PBXNativeTarget "SYSY FAMILY" */;
+			buildPhases = (
+				AAAABBBBCCCC000000000201 /* Sources */,
+				AAAABBBBCCCC000000000200 /* Frameworks */,
+				AAAABBBBCCCC000000000202 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = "SYSY FAMILY";
+			productName = "SYSY FAMILY";
+			productReference = AAAABBBBCCCC000000000100 /* SYSY FAMILY.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AAAABBBBCCCC000000000600 /* Project object */ = {
+			isa = PBXProject;
+			attributes = { LastUpgradeCheck = 1600; };
+			buildConfigurationList = AAAABBBBCCCC000000000800 /* Build configuration list for PBXProject "SYSY FAMILY" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = AAAABBBBCCCC000000000300;
+			productRefGroup = AAAABBBBCCCC000000000302 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (AAAABBBBCCCC000000000500 /* SYSY FAMILY */);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AAAABBBBCCCC000000000202 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AAAABBBBCCCC000000000201 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAABBBBCCCC000000000001 /* SYSY_FAMILYApp.swift in Sources */,
+				AAAABBBBCCCC000000000002 /* Models.swift in Sources */,
+				AAAABBBBCCCC000000000003 /* Theme.swift in Sources */,
+				AAAABBBBCCCC000000000004 /* MainTabView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AAAABBBBCCCC000000000900 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "SYSY FAMILY";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Debug;
+		};
+		AAAABBBBCCCC000000000901 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "SYSY FAMILY";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Release;
+		};
+		AAAABBBBCCCC000000000A00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = { };
+			name = Debug;
+		};
+		AAAABBBBCCCC000000000A01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = { };
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AAAABBBBCCCC000000000700 /* Build configuration list for PBXNativeTarget "SYSY FAMILY" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAABBBBCCCC000000000900 /* Debug */,
+				AAAABBBBCCCC000000000901 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAAABBBBCCCC000000000800 /* Build configuration list for PBXProject "SYSY FAMILY" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAABBBBCCCC000000000A00 /* Debug */,
+				AAAABBBBCCCC000000000A01 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AAAABBBBCCCC000000000600 /* Project object */;
+}
