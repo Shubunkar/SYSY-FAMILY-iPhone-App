@@ -1,4 +1,3 @@
-
 name: Build SYSY FAMILY V63 IPA
 
 on:
@@ -12,12 +11,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check project
+      - name: Check project files
         run: |
           set -e
           echo "Checking repository..."
           ls -la
-          test -f "SYSY FAMILY.xcodeproj/project.pbxproj"
+          echo "Finding project.pbxproj..."
+          find . -name "project.pbxproj" -print
+          test -f "project.pbxproj"
+
+      - name: Prepare Xcode project
+        run: |
+          set -e
+          mkdir -p "SYSY FAMILY.xcodeproj"
+          cp "project.pbxproj" "SYSY FAMILY.xcodeproj/project.pbxproj"
 
       - name: Build unsigned iPhone app
         run: |
@@ -58,4 +65,3 @@ jobs:
           name: SYSY-FAMILY-V63-IPA
           path: build/SYSY_FAMILY_V63_unsigned.ipa
           retention-days: 7
-
