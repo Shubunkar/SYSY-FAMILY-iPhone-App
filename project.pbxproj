@@ -24,7 +24,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AAAABBBBCCCC000000000200 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AAAABBBBCCCC000000000200 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -69,8 +75,10 @@
 				AAAABBBBCCCC000000000200 /* Frameworks */,
 				AAAABBBBCCCC000000000202 /* Resources */,
 			);
-			buildRules = ();
-			dependencies = ();
+			buildRules = (
+			);
+			dependencies = (
+			);
 			name = "SYSY FAMILY";
 			productName = "SYSY FAMILY";
 			productReference = AAAABBBBCCCC000000000100 /* SYSY FAMILY.app */;
@@ -81,17 +89,24 @@
 /* Begin PBXProject section */
 		AAAABBBBCCCC000000000600 /* Project object */ = {
 			isa = PBXProject;
-			attributes = { LastUpgradeCheck = 1600; };
+			attributes = {
+				LastUpgradeCheck = 1600;
+			};
 			buildConfigurationList = AAAABBBBCCCC000000000800 /* Build configuration list for PBXProject "SYSY FAMILY" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, Base);
+			knownRegions = (
+				en,
+				Base,
+			);
 			mainGroup = AAAABBBBCCCC000000000300;
 			productRefGroup = AAAABBBBCCCC000000000302 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (AAAABBBBCCCC000000000500 /* SYSY FAMILY */);
+			targets = (
+				AAAABBBBCCCC000000000500 /* SYSY FAMILY */,
+			);
 		};
 /* End PBXProject section */
 
@@ -130,8 +145,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "SYSY FAMILY";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
+				SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
@@ -147,8 +162,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "SYSY FAMILY";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
+				SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
