@@ -11,7 +11,7 @@
 		AAAABBBBCCCC000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000102 /* Models.swift */; };
 		AAAABBBBCCCC000000000003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000103 /* Theme.swift */; };
 		AAAABBBBCCCC000000000004 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000104 /* MainTabView.swift */; };
-AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000105 /* Assets.xcassets */; };
+		AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAABBBBCCCC000000000105 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +36,7 @@ AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFil
 			);
 			sourceTree = "<group>";
 		};
+
 		AAAABBBBCCCC000000000301 /* SYSY FAMILY */ = {
 			isa = PBXGroup;
 			children = (
@@ -48,6 +49,7 @@ AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFil
 			path = "SYSY FAMILY";
 			sourceTree = "<group>";
 		};
+
 		AAAABBBBCCCC000000000302 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -128,12 +130,14 @@ AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFil
 				INFOPLIST_KEY_CFBundleDisplayName = "SYSY FAMILY";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
 			name = Debug;
 		};
+
 		AAAABBBBCCCC000000000901 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -143,20 +147,25 @@ AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFil
 				INFOPLIST_KEY_CFBundleDisplayName = "SYSY FAMILY";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
 			name = Release;
 		};
+
 		AAAABBBBCCCC000000000A00 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			buildSettings = { };
+			buildSettings = {
+			};
 			name = Debug;
 		};
+
 		AAAABBBBCCCC000000000A01 /* Release */ = {
 			isa = XCBuildConfiguration;
-			buildSettings = { };
+			buildSettings = {
+			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
@@ -171,6 +180,7 @@ AAAABBBBCCCC000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFil
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+
 		AAAABBBBCCCC000000000800 /* Build configuration list for PBXProject "SYSY FAMILY" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
