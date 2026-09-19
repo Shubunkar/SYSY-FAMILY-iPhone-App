@@ -170,22 +170,18 @@
 			name = Release;
 		};
 
-		AAAABBBBCCCC000000000A00 /* Debug */ = {
+		AAAABBBBCCCC000000000A00 /* Project Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
-			name = Debug;IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
-PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
+			name = Debug;
 		};
 
-		AAAABBBBCCCC000000000A01 /* Release */ = {
+		AAAABBBBCCCC000000000A01 /* Project Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
-			name = Release;IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-SUPPORTED_PLATFORMS = iphoneos iphonesimulator;
-PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -203,8 +199,8 @@ PRODUCT_BUNDLE_IDENTIFIER = "com.sysyfamily.aluminium";
 		AAAABBBBCCCC000000000800 /* Build configuration list for PBXProject "SYSY FAMILY" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AAAABBBBCCCC000000000A00 /* Debug */,
-				AAAABBBBCCCC000000000A01 /* Release */,
+				AAAABBBBCCCC000000000A00 /* Project Debug */,
+				AAAABBBBCCCC000000000A01 /* Project Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
