@@ -11,17 +11,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create Xcode project
+      - name: Prepare Xcode project
         run: |
           set -e
+
           rm -rf "SYSY FAMILY.xcodeproj"
+          rm -rf "SYSY FAMILY"
+
           mkdir -p "SYSY FAMILY.xcodeproj"
+          mkdir -p "SYSY FAMILY"
+          mkdir -p "SYSY FAMILY/Assets.xcassets"
+
           cp "project.pbxproj" "SYSY FAMILY.xcodeproj/project.pbxproj"
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+          cp "SYSY_FAMILYApp.swift" "SYSY FAMILY/"
+          cp "Models.swift" "SYSY FAMILY/"
+          cp "Theme.swift" "SYSY FAMILY/"
+          cp "MainTabView.swift" "SYSY FAMILY/"
 
-      - name: Check project
+          cat > "SYSY FAMILY/Assets.xcassets/Contents.json" <<'EOF'
+          {
+            "info" : {
+              "author" : "xcode",
+              "version" : 1
+            }
+          }
+          EOF
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+
+      - name: Validate Xcode project
         run: |
           set -e
           xcodebuild -list -project "SYSY FAMILY.xcodeproj"
@@ -29,6 +50,7 @@ jobs:
       - name: Build unsigned app
         run: |
           set -o pipefail
+
           xcodebuild \
             -project "SYSY FAMILY.xcodeproj" \
             -scheme "SYSY FAMILY" \
@@ -44,6 +66,7 @@ jobs:
       - name: Find built app
         run: |
           set -e
+
           find build/DerivedData/Build/Products \
             -maxdepth 2 \
             -name "*.app" \
