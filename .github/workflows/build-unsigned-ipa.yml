@@ -8,129 +8,133 @@ jobs:
     runs-on: macos-15
 
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Prepare Xcode project
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Prepare clean project
         shell: bash
         run: |
           set -e
 
-          rm -rf "SYSY FAMILY.xcodeproj"
-          rm -rf "SYSY FAMILY"
+          rm -rf "Generated"
 
-          mkdir -p "SYSY FAMILY.xcodeproj"
-          mkdir -p "SYSY FAMILY/Assets.xcassets"
+          mkdir -p "Generated/SYSY FAMILY"
 
-          test -f "project.pbxproj"
-          test -f "SYSY_FAMILYApp.swift"
-          test -f "Models.swift"
-          test -f "Theme.swift"
-          test -f "MainTabView.swift"
+          cp "SYSY_FAMILYApp.swift" "Generated/SYSY FAMILY/"
+          cp "Models.swift" "Generated/SYSY FAMILY/"
+          cp "Theme.swift" "Generated/SYSY FAMILY/"
+          cp "MainTabView.swift" "Generated/SYSY FAMILY/"
 
-          cp "project.pbxproj" \
-            "SYSY FAMILY.xcodeproj/project.pbxproj"
+          if [ -d "Assets.xcassets" ]; then
+            cp -R "Assets.xcassets" "Generated/SYSY FAMILY/"
+          fi
 
-          cp "SYSY_FAMILYApp.swift" "SYSY FAMILY/"
-          cp "Models.swift" "SYSY FAMILY/"
-          cp "Theme.swift" "SYSY FAMILY/"
-          cp "MainTabView.swift" "SYSY FAMILY/"
+          cat > "Generated/project.yml" <<'EOF'
+          name: SYSY FAMILY
 
-          cat > "SYSY FAMILY/Assets.xcassets/Contents.json" <<'EOF'
-          {
-            "info" : {
-              "author" : "xcode",
-              "version" : 1
-            }
-          }
+          options:
+            projectFormat: xcode16_3
+            deploymentTarget:
+              iOS: "17.0"
+            createIntermediateGroups: true
+
+          settings:
+            base:
+              SWIFT_VERSION: "5.0"
+              IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+
+          targets:
+            SYSY FAMILY:
+              type: application
+              platform: iOS
+              deploymentTarget: "17.0"
+
+              sources:
+                - path: "SYSY FAMILY"
+
+              settings:
+                base:
+                  PRODUCT_BUNDLE_IDENTIFIER: com.sysyfamily.aluminium
+                  PRODUCT_NAME: "SYSY FAMILY"
+                  SWIFT_VERSION: "5.0"
+                  IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+                  TARGETED_DEVICE_FAMILY: "1"
+                  GENERATE_INFOPLIST_FILE: YES
+
+              scheme:
+                gatherCoverageData: false
           EOF
 
-      - name: Show Xcode version
+      - name: Generate clean Xcode project
+        working-directory: Generated
         run: |
-          xcodebuild -version
+          set -e
+          xcodegen generate
+          test -f "SYSY FAMILY.xcodeproj/project.pbxproj"
 
-      - name: Check project file
-        shell: bash
+      - name: Verify generated project
+        run: |
+          set -e
+          xcodebuild \
+            -project "Generated/SYSY FAMILY.xcodeproj" \
+            -scheme "SYSY FAMILY" \
+            -showBuildSettings > /tmp/build-settings.txt
+
+      - name: Build unsigned app
         run: |
           set -e
 
-          test -f "SYSY FAMILY.xcodeproj/project.pbxproj"
-
-          grep -q 'objectVersion = 56;' \
-            "SYSY FAMILY.xcodeproj/project.pbxproj"
-
-          grep -q 'compatibilityVersion = "Xcode 15.0";' \
-            "SYSY FAMILY.xcodeproj/project.pbxproj"
-
-          echo "Xcode project file check passed."
-
-      - name: Build unsigned app
-        shell: bash
-        run: |
-          set -o pipefail
-
           xcodebuild \
-            -project "SYSY FAMILY.xcodeproj" \
+            -project "Generated/SYSY FAMILY.xcodeproj" \
             -scheme "SYSY FAMILY" \
             -sdk iphoneos \
             -configuration Release \
-            -derivedDataPath build/DerivedData \
+            -derivedDataPath "Generated/build/DerivedData" \
             -destination "generic/platform=iOS" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             build
 
-      - name: Find built app
-        shell: bash
-        run: |
-          set -e
-
-          APP=$(find \
-            "build/DerivedData/Build/Products/Release-iphoneos" \
-            -maxdepth 1 \
-            -name "*.app" \
-            -type d \
-            | head -1)
-
-          test -n "$APP"
-
-          echo "Built app:"
-          echo "$APP"
-
       - name: Package IPA
         shell: bash
         run: |
           set -e
 
-          APP=$(find \
-            "build/DerivedData/Build/Products/Release-iphoneos" \
-            -maxdepth 1 \
-            -name "*.app" \
+          APP_PATH=$(find "Generated/build/DerivedData/Build/Products" \
             -type d \
-            | head -1)
+            -name "*.app" \
+            -path "*Release-iphoneos/*" \
+            | head -n 1)
 
-          test -n "$APP"
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: .app file was not found."
+            find "Generated/build/DerivedData/Build/Products" -maxdepth 4 -print
+            exit 1
+          fi
 
-          rm -rf build/Payload
-          mkdir -p build/Payload
+          echo "Found app:"
+          echo "$APP_PATH"
 
-          cp -R "$APP" build/Payload/
+          rm -rf "Generated/Payload"
+          mkdir -p "Generated/Payload"
 
-          cd build
+          cp -R "$APP_PATH" "Generated/Payload/"
 
-          zip -qry \
-            "SYSY_FAMILY_V63_unsigned.ipa" \
-            Payload
+          cd Generated
+          zip -r "SYSY_FAMILY_V63_unsigned.ipa" Payload
 
           test -f "SYSY_FAMILY_V63_unsigned.ipa"
-
-          ls -lh "SYSY_FAMILY_V63_unsigned.ipa"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: SYSY-FAMILY-V63-IPA
-          path: build/SYSY_FAMILY_V63_unsigned.ipa
+          path: Generated/SYSY_FAMILY_V63_unsigned.ipa
           if-no-files-found: error
-          retention-days: 7
