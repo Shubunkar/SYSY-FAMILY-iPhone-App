@@ -1,8 +1,9 @@
+```swift
 import Foundation
 import SwiftUI
 import CryptoKit
 
-struct Customer: Identifiable, Codable {
+struct Customer: Identifiable, Codable, Hashable {
     var projectAddress: String = ""
     var siteNote: String = ""
     var photoFileNames: [String] = []
@@ -34,8 +35,6 @@ struct Quote: Identifiable, Codable {
     var subtotal: Double { items.reduce(0) { $0 + $1.amount } }
     var balance: Double { max(0, subtotal - advance) }
 }
-
-
 
 struct BackupData: Codable {
     var exportedAt: Date
@@ -74,7 +73,7 @@ struct BackupData: Codable {
     }
 }
 
-struct RateItem: Identifiable, Codable {
+struct RateItem: Identifiable, Codable, Hashable {
     let id = UUID()
     var name: String
     var unit: String
@@ -89,7 +88,6 @@ final class RateStore: ObservableObject {
         RateItem(name: "Labour", unit: "Sqft", rate: 0)
     ]
 }
-
 
 struct Measurement: Identifiable, Codable {
     let id = UUID()
@@ -107,7 +105,6 @@ struct Measurement: Identifiable, Codable {
         sqft * rate
     }
 }
-
 
 struct QuotationLine: Identifiable, Codable {
     let id = UUID()
@@ -220,7 +217,6 @@ struct BusinessQuotation: Identifiable, Codable {
     }
 }
 
-
 struct PaymentRecord: Identifiable, Codable {
     let id = UUID()
     var customerName: String
@@ -241,7 +237,6 @@ struct CustomerAccount: Identifiable, Codable {
     var totalPaid: Double { quotationAdvances + paymentRecordsTotal }
     var totalDue: Double { max(0, totalQuoted - totalPaid) }
 }
-
 
 final class BusinessStore: ObservableObject {
     @Published var customers: [Customer] = []
@@ -287,7 +282,6 @@ final class BusinessStore: ObservableObject {
         return monthlyAdvances + monthlyPayments
     }
 }
-
 
 extension PersistedAppData {
     /// Reject obviously corrupt backup values before replacing the current local data.
@@ -377,7 +371,13 @@ final class AppDataStore: ObservableObject {
             projectAddress: quotation.projectAddress,
             siteNote: quotation.siteNote,
             status: .draft,
-            lines: quotation.lines.map { QuotationLine(title: $0.title, description: $0.description, amount: $0.amount) },
+            lines: quotation.lines.map {
+                QuotationLine(
+                    title: $0.title,
+                    description: $0.description,
+                    amount: $0.amount
+                )
+            },
             discount: quotation.discount,
             advance: 0,
             advanceDate: nil
@@ -395,7 +395,6 @@ final class AppDataStore: ObservableObject {
         return String(format: "QT-%@-%03d", formatter.string(from: date), count + 1)
     }
 }
-
 
 extension AppDataStore {
     var totalSales: Double {
@@ -437,7 +436,6 @@ extension AppDataStore {
     }
 }
 
-
 struct CustomerMeasurement: Identifiable, Codable {
     let id = UUID()
     var customerName: String
@@ -450,3 +448,4 @@ struct CustomerMeasurement: Identifiable, Codable {
     var sqft: Double { width * height * Double(quantity) }
     var amount: Double { sqft * rate }
 }
+```
