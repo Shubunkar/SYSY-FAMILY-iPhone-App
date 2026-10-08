@@ -12,7 +12,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show Xcode version
-        run: xcodebuild -version
+        run: |
+          xcodebuild -version
+          swift --version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -22,9 +24,15 @@ jobs:
         run: |
           set -e
 
-          rm -rf "Generated"
-
+          rm -rf Generated
           mkdir -p "Generated/SYSY FAMILY"
+
+          echo "Checking source files..."
+
+          test -f "SYSY_FAMILYApp.swift"
+          test -f "Models.swift"
+          test -f "Theme.swift"
+          test -f "MainTabView.swift"
 
           cp "SYSY_FAMILYApp.swift" "Generated/SYSY FAMILY/"
           cp "Models.swift" "Generated/SYSY FAMILY/"
@@ -48,6 +56,7 @@ jobs:
             base:
               SWIFT_VERSION: "5.0"
               IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+              SWIFT_STRICT_CONCURRENCY: minimal
 
           targets:
             SYSY FAMILY:
@@ -66,6 +75,7 @@ jobs:
                   IPHONEOS_DEPLOYMENT_TARGET: "17.0"
                   TARGETED_DEVICE_FAMILY: "1"
                   GENERATE_INFOPLIST_FILE: YES
+                  SWIFT_STRICT_CONCURRENCY: minimal
 
               scheme:
                 gatherCoverageData: false
@@ -81,14 +91,18 @@ jobs:
       - name: Verify generated project
         run: |
           set -e
+
           xcodebuild \
             -project "Generated/SYSY FAMILY.xcodeproj" \
             -scheme "SYSY FAMILY" \
-            -showBuildSettings > /tmp/build-settings.txt
+            -showBuildSettings
 
       - name: Build unsigned app
+        shell: bash
         run: |
-          set -e
+          set -o pipefail
+
+          mkdir -p Generated/logs
 
           xcodebuild \
             -project "Generated/SYSY FAMILY.xcodeproj" \
@@ -100,14 +114,19 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build
+            SWIFT_VERSION=5.0 \
+            SWIFT_STRICT_CONCURRENCY=minimal \
+            build \
+            2>&1 | tee "Generated/logs/build.log"
 
-      - name: Package IPA
+      - name: Find built app
+        if: success()
         shell: bash
         run: |
           set -e
 
-          APP_PATH=$(find "Generated/build/DerivedData/Build/Products" \
+          APP_PATH=$(find \
+            "Generated/build/DerivedData/Build/Products" \
             -type d \
             -name "*.app" \
             -path "*Release-iphoneos/*" \
@@ -115,26 +134,48 @@ jobs:
 
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: .app file was not found."
-            find "Generated/build/DerivedData/Build/Products" -maxdepth 4 -print
+            find "Generated/build/DerivedData/Build/Products" -maxdepth 5 -print
             exit 1
           fi
 
-          echo "Found app:"
-          echo "$APP_PATH"
+          echo "$APP_PATH" > Generated/app_path.txt
 
-          rm -rf "Generated/Payload"
-          mkdir -p "Generated/Payload"
+          echo "Built app:"
+          cat Generated/app_path.txt
 
-          cp -R "$APP_PATH" "Generated/Payload/"
+      - name: Package IPA
+        if: success()
+        shell: bash
+        run: |
+          set -e
+
+          APP_PATH=$(cat Generated/app_path.txt)
+
+          rm -rf Generated/Payload
+          mkdir -p Generated/Payload
+
+          cp -R "$APP_PATH" Generated/Payload/
 
           cd Generated
-          zip -r "SYSY_FAMILY_V63_unsigned.ipa" Payload
 
-          test -f "SYSY_FAMILY_V63_unsigned.ipa"
+          rm -f SYSY_FAMILY_V63_unsigned.ipa
+
+          zip -r SYSY_FAMILY_V63_unsigned.ipa Payload
+
+          test -f SYSY_FAMILY_V63_unsigned.ipa
 
       - name: Upload IPA
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: SYSY-FAMILY-V63-IPA
           path: Generated/SYSY_FAMILY_V63_unsigned.ipa
           if-no-files-found: error
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SYSY-FAMILY-V63-BUILD-LOG
+          path: Generated/logs/build.log
+          if-no-files-found: warn
