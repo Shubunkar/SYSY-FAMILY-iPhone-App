@@ -1,236 +1,205 @@
 name: Build SYSY FAMILY V63 IPA
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-build:
-runs-on: macos-15
+  build:
+    runs-on: macos-15
 
-````
-steps:
-  - name: Checkout source
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-  - name: Show Xcode version
-    run: |
-      xcodebuild -version
-      swift --version
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          swift --version
 
-  - name: Install XcodeGen
-    run: brew install xcodegen
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
-  - name: Prepare and fix source
-    shell: bash
-    run: |
-      set -e
+      - name: Prepare source
+        shell: bash
+        run: |
+          set -e
 
-      rm -rf Generated
-      mkdir -p "Generated/SYSY FAMILY"
-      mkdir -p Generated/logs
+          rm -rf Generated
+          mkdir -p "Generated/SYSY FAMILY"
+          mkdir -p Generated/logs
 
-      echo "Checking source files..."
+          cp "SYSY_FAMILYApp.swift" "Generated/SYSY FAMILY/"
+          cp "Models.swift" "Generated/SYSY FAMILY/"
+          cp "Theme.swift" "Generated/SYSY FAMILY/"
+          cp "MainTabView.swift" "Generated/SYSY FAMILY/"
 
-      test -f "SYSY_FAMILYApp.swift"
-      test -f "Models.swift"
-      test -f "Theme.swift"
-      test -f "MainTabView.swift"
+          if [ -d "Assets.xcassets" ]; then
+            cp -R "Assets.xcassets" "Generated/SYSY FAMILY/"
+          fi
 
-      cp "SYSY_FAMILYApp.swift" "Generated/SYSY FAMILY/"
-      cp "Models.swift" "Generated/SYSY FAMILY/"
-      cp "Theme.swift" "Generated/SYSY FAMILY/"
-      cp "MainTabView.swift" "Generated/SYSY FAMILY/"
+          echo "Removing Markdown fences..."
 
-      if [ -d "Assets.xcassets" ]; then
-        cp -R "Assets.xcassets" "Generated/SYSY FAMILY/"
-      fi
+          sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
+          sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
 
-      echo "Removing accidental Markdown code fences..."
+          sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/MainTabView.swift"
+          sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/MainTabView.swift"
 
-      sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
-      sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
+          python3 - <<'PY'
+          from pathlib import Path
 
-      sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/MainTabView.swift"
-      sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/MainTabView.swift"
+          path = Path("Generated/SYSY FAMILY/MainTabView.swift")
+          text = path.read_text(encoding="utf-8")
 
-      echo "Fixing MainTabView formatting error..."
+          text = text.replace(
+              'description: "\\(item.width, specifier: "%.2f") × \\(item.height, specifier: "%.2f") × \\(item.quantity)",',
+              'description: String(format: "%.2f × %.2f × %d", item.width, item.height, item.quantity),'
+          )
 
-      python3 - <<'PY'
-      from pathlib import Path
+          text = text.replace(
+              'Text("৳ \\(Int(store.data.totalDue))")',
+              'Text("৳ \\(Int(store.totalDue))")'
+          )
 
-      path = Path("Generated/SYSY FAMILY/MainTabView.swift")
-      text = path.read_text(encoding="utf-8")
+          path.write_text(text, encoding="utf-8")
+          print("Source fixes applied.")
+          PY
 
-      old = 'description: "\\(item.width, specifier: "%.2f") × \\(item.height, specifier: "%.2f") × \\(item.quantity)",'
-      new = 'description: String(format: "%.2f × %.2f × %d", item.width, item.height, item.quantity),'
+          echo "Source preparation complete."
 
-      if old in text:
-          text = text.replace(old, new)
-          print("Fixed measurement description.")
-      else:
-          print("Measurement description pattern not found; continuing.")
+      - name: Create Xcode project
+        shell: bash
+        run: |
+          set -e
 
-      old2 = 'Text("৳ \\(Int(store.data.totalDue))")'
-      new2 = 'Text("৳ \\(Int(store.totalDue))")'
+          cat > "Generated/project.yml" <<'EOF'
+          name: SYSY FAMILY
 
-      if old2 in text:
-          text = text.replace(old2, new2)
-          print("Fixed totalDue reference.")
-      else:
-          print("totalDue pattern not found; continuing.")
-
-      path.write_text(text, encoding="utf-8")
-      PY
-
-      echo "Source preparation completed."
-
-      echo "Checking Models.swift first and last lines..."
-      head -n 5 "Generated/SYSY FAMILY/Models.swift"
-      tail -n 5 "Generated/SYSY FAMILY/Models.swift"
-
-  - name: Create Xcode project
-    shell: bash
-    run: |
-      set -e
-
-      cat > "Generated/project.yml" <<'EOF'
-      name: SYSY FAMILY
-
-      options:
-        projectFormat: xcode16_3
-        deploymentTarget:
-          iOS: "17.0"
-        createIntermediateGroups: true
-
-      settings:
-        base:
-          SWIFT_VERSION: "5.0"
-          IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-          SWIFT_STRICT_CONCURRENCY: minimal
-
-      targets:
-        SYSY FAMILY:
-          type: application
-          platform: iOS
-          deploymentTarget: "17.0"
-
-          sources:
-            - path: "SYSY FAMILY"
+          options:
+            projectFormat: xcode16_3
+            deploymentTarget:
+              iOS: "17.0"
+            createIntermediateGroups: true
 
           settings:
             base:
-              PRODUCT_BUNDLE_IDENTIFIER: com.sysyfamily.aluminium
-              PRODUCT_NAME: "SYSY FAMILY"
               SWIFT_VERSION: "5.0"
               IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-              TARGETED_DEVICE_FAMILY: "1"
-              GENERATE_INFOPLIST_FILE: YES
               SWIFT_STRICT_CONCURRENCY: minimal
 
-          scheme:
-            gatherCoverageData: false
-      EOF
+          targets:
+            SYSY FAMILY:
+              type: application
+              platform: iOS
+              deploymentTarget: "17.0"
 
-      cd Generated
-      xcodegen generate
+              sources:
+                - path: "SYSY FAMILY"
 
-      test -f "SYSY FAMILY.xcodeproj/project.pbxproj"
+              settings:
+                base:
+                  PRODUCT_BUNDLE_IDENTIFIER: com.sysyfamily.aluminium
+                  PRODUCT_NAME: "SYSY FAMILY"
+                  SWIFT_VERSION: "5.0"
+                  IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+                  TARGETED_DEVICE_FAMILY: "1"
+                  GENERATE_INFOPLIST_FILE: YES
+                  SWIFT_STRICT_CONCURRENCY: minimal
 
-      echo "Xcode project generated successfully."
+              scheme:
+                gatherCoverageData: false
+          EOF
 
-  - name: Verify project
-    run: |
-      set -e
+          cd Generated
+          xcodegen generate
 
-      xcodebuild \
-        -project "Generated/SYSY FAMILY.xcodeproj" \
-        -scheme "SYSY FAMILY" \
-        -showBuildSettings \
-        > Generated/logs/build-settings.log
+          test -f "SYSY FAMILY.xcodeproj/project.pbxproj"
 
-      echo "Project verification completed."
+          echo "Xcode project generated successfully."
 
-  - name: Build unsigned app
-    shell: bash
-    run: |
-      set -o pipefail
+      - name: Verify project
+        run: |
+          set -e
 
-      xcodebuild \
-        -project "Generated/SYSY FAMILY.xcodeproj" \
-        -scheme "SYSY FAMILY" \
-        -sdk iphoneos \
-        -configuration Release \
-        -derivedDataPath "Generated/build/DerivedData" \
-        -destination "generic/platform=iOS" \
-        CODE_SIGNING_ALLOWED=NO \
-        CODE_SIGNING_REQUIRED=NO \
-        CODE_SIGN_IDENTITY="" \
-        SWIFT_VERSION=5.0 \
-        SWIFT_STRICT_CONCURRENCY=minimal \
-        build \
-        2>&1 | tee "Generated/logs/build.log"
+          xcodebuild \
+            -project "Generated/SYSY FAMILY.xcodeproj" \
+            -scheme "SYSY FAMILY" \
+            -showBuildSettings \
+            > Generated/logs/build-settings.log
 
-  - name: Find built app
-    if: success()
-    shell: bash
-    run: |
-      set -e
+      - name: Build unsigned app
+        shell: bash
+        run: |
+          set -o pipefail
 
-      APP_PATH=$(find \
-        "Generated/build/DerivedData/Build/Products" \
-        -type d \
-        -name "*.app" \
-        -path "*Release-iphoneos/*" \
-        | head -n 1)
+          xcodebuild \
+            -project "Generated/SYSY FAMILY.xcodeproj" \
+            -scheme "SYSY FAMILY" \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath "Generated/build/DerivedData" \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            SWIFT_VERSION=5.0 \
+            SWIFT_STRICT_CONCURRENCY=minimal \
+            build \
+            2>&1 | tee "Generated/logs/build.log"
 
-      if [ -z "$APP_PATH" ]; then
-        echo "ERROR: .app file was not found."
-        find "Generated/build/DerivedData/Build/Products" -maxdepth 5 -print
-        exit 1
-      fi
+      - name: Find built app
+        if: success()
+        shell: bash
+        run: |
+          set -e
 
-      echo "$APP_PATH" > Generated/app_path.txt
+          APP_PATH=$(find \
+            "Generated/build/DerivedData/Build/Products" \
+            -type d \
+            -name "*.app" \
+            -path "*Release-iphoneos/*" \
+            | head -n 1)
 
-      echo "Built app:"
-      cat Generated/app_path.txt
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: .app file was not found."
+            exit 1
+          fi
 
-  - name: Package IPA
-    if: success()
-    shell: bash
-    run: |
-      set -e
+          echo "$APP_PATH" > Generated/app_path.txt
 
-      APP_PATH=$(cat Generated/app_path.txt)
+      - name: Package IPA
+        if: success()
+        shell: bash
+        run: |
+          set -e
 
-      rm -rf Generated/Payload
-      mkdir -p Generated/Payload
+          APP_PATH=$(cat Generated/app_path.txt)
 
-      cp -R "$APP_PATH" Generated/Payload/
+          rm -rf Generated/Payload
+          mkdir -p Generated/Payload
 
-      cd Generated
+          cp -R "$APP_PATH" Generated/Payload/
 
-      rm -f SYSY_FAMILY_V63_unsigned.ipa
+          cd Generated
 
-      zip -r SYSY_FAMILY_V63_unsigned.ipa Payload
+          zip -r SYSY_FAMILY_V63_unsigned.ipa Payload
 
-      test -f SYSY_FAMILY_V63_unsigned.ipa
+          test -f SYSY_FAMILY_V63_unsigned.ipa
 
-      echo "IPA created successfully:"
-      ls -lh SYSY_FAMILY_V63_unsigned.ipa
+          ls -lh SYSY_FAMILY_V63_unsigned.ipa
 
-  - name: Upload IPA
-    if: success()
-    uses: actions/upload-artifact@v4
-    with:
-      name: SYSY-FAMILY-V63-IPA
-      path: Generated/SYSY_FAMILY_V63_unsigned.ipa
-      if-no-files-found: error
+      - name: Upload IPA
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SYSY-FAMILY-V63-IPA
+          path: Generated/SYSY_FAMILY_V63_unsigned.ipa
+          if-no-files-found: error
 
-  - name: Upload build logs
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: SYSY-FAMILY-V63-BUILD-LOG
-      path: Generated/logs/
-      if-no-files-found: warn
-````
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SYSY-FAMILY-V63-BUILD-LOG
+          path: Generated/logs/
+          if-no-files-found: warn
