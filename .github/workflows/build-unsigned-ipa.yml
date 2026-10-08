@@ -26,7 +26,6 @@ jobs:
 
           rm -rf Generated
           mkdir -p "Generated/SYSY FAMILY"
-          mkdir -p Generated/logs
 
           cp "SYSY_FAMILYApp.swift" "Generated/SYSY FAMILY/"
           cp "Models.swift" "Generated/SYSY FAMILY/"
@@ -36,8 +35,6 @@ jobs:
           if [ -d "Assets.xcassets" ]; then
             cp -R "Assets.xcassets" "Generated/SYSY FAMILY/"
           fi
-
-          echo "Removing Markdown fences..."
 
           sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
           sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
@@ -62,10 +59,20 @@ jobs:
           )
 
           path.write_text(text, encoding="utf-8")
-          print("Source fixes applied.")
           PY
 
-          echo "Source preparation complete."
+          echo "SOURCE CHECK"
+          echo "============"
+
+          echo "--- Models.swift first 3 lines ---"
+          head -n 3 "Generated/SYSY FAMILY/Models.swift"
+
+          echo "--- Models.swift last 3 lines ---"
+          tail -n 3 "Generated/SYSY FAMILY/Models.swift"
+
+          echo "--- MainTabView.swift check ---"
+          grep -n "specifier:" "Generated/SYSY FAMILY/MainTabView.swift" || true
+          grep -n "store.data.totalDue" "Generated/SYSY FAMILY/MainTabView.swift" || true
 
       - name: Create Xcode project
         shell: bash
@@ -113,20 +120,6 @@ jobs:
           cd Generated
           xcodegen generate
 
-          test -f "SYSY FAMILY.xcodeproj/project.pbxproj"
-
-          echo "Xcode project generated successfully."
-
-      - name: Verify project
-        run: |
-          set -e
-
-          xcodebuild \
-            -project "Generated/SYSY FAMILY.xcodeproj" \
-            -scheme "SYSY FAMILY" \
-            -showBuildSettings \
-            > Generated/logs/build-settings.log
-
       - name: Build unsigned app
         shell: bash
         run: |
@@ -144,8 +137,31 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             SWIFT_VERSION=5.0 \
             SWIFT_STRICT_CONCURRENCY=minimal \
-            build \
-            2>&1 | tee "Generated/logs/build.log"
+            build 2>&1 | tee build.log
+
+      - name: Show compiler errors
+        if: failure()
+        shell: bash
+        run: |
+          echo "======================================"
+          echo "COMPILER ERRORS"
+          echo "======================================"
+
+          grep -n -E "error:|fatal error:|BUILD FAILED" build.log || true
+
+          echo "======================================"
+          echo "LAST 150 LINES"
+          echo "======================================"
+
+          tail -n 150 build.log
+
+      - name: Upload diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SYSY-FAMILY-V63-DIAGNOSTIC
+          path: build.log
+          if-no-files-found: warn
 
       - name: Find built app
         if: success()
@@ -160,10 +176,7 @@ jobs:
             -path "*Release-iphoneos/*" \
             | head -n 1)
 
-          if [ -z "$APP_PATH" ]; then
-            echo "ERROR: .app file was not found."
-            exit 1
-          fi
+          test -n "$APP_PATH"
 
           echo "$APP_PATH" > Generated/app_path.txt
 
@@ -184,10 +197,6 @@ jobs:
 
           zip -r SYSY_FAMILY_V63_unsigned.ipa Payload
 
-          test -f SYSY_FAMILY_V63_unsigned.ipa
-
-          ls -lh SYSY_FAMILY_V63_unsigned.ipa
-
       - name: Upload IPA
         if: success()
         uses: actions/upload-artifact@v4
@@ -195,11 +204,3 @@ jobs:
           name: SYSY-FAMILY-V63-IPA
           path: Generated/SYSY_FAMILY_V63_unsigned.ipa
           if-no-files-found: error
-
-      - name: Upload build logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: SYSY-FAMILY-V63-BUILD-LOG
-          path: Generated/logs/
-          if-no-files-found: warn
