@@ -2,26 +2,27 @@ import SwiftUI
 import PhotosUI
 struct MainTabView: View {
     @EnvironmentObject var store: AppDataStore
+    @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
 
     var body: some View {
         TabView {
             DashboardView()
-                .tabItem { Label("হোম", systemImage: "house.fill") }
+                .tabItem { Label(selectedLanguage == "en" ? "Home" : "হোম", systemImage: "house.fill") }
 
             CustomersView()
-                .tabItem { Label("কাস্টমার", systemImage: "person.2.fill") }
+                .tabItem { Label(selectedLanguage == "en" ? "Customers" : "কাস্টমার", systemImage: "person.2.fill") }
 
             CustomerMeasurementFlowView()
-                .tabItem { Label("কাজ", systemImage: "ruler.and.arrowtriangle.2.inward") }
+                .tabItem { Label(selectedLanguage == "en" ? "Work" : "কাজ", systemImage: "ruler.and.arrowtriangle.2.inward") }
 
             QuotesView()
-                .tabItem { Label("কোটেশন", systemImage: "doc.text.fill") }
+                .tabItem { Label(selectedLanguage == "en" ? "Quotations" : "কোটেশন", systemImage: "doc.text.fill") }
 
             PaymentsView()
-                .tabItem { Label("হিসাব", systemImage: "creditcard.fill") }
+                .tabItem { Label(selectedLanguage == "en" ? "Accounts" : "হিসাব", systemImage: "creditcard.fill") }
 
             SettingsView()
-                .tabItem { Label("আরও", systemImage: "ellipsis") }
+                .tabItem { Label(selectedLanguage == "en" ? "More" : "আরও", systemImage: "ellipsis") }
         }
         .tint(.sysyGold)
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
@@ -1023,8 +1024,6 @@ struct QuotationPreviewView: View {
                 // Company header
                 HStack(alignment: .top, spacing: 14) {
                     SYSYLogoView()
-                        .resizable()
-                        .scaledToFit()
                         .frame(width: 74, height: 74)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -1669,8 +1668,6 @@ struct QuoteDetailView: View {
                 AppCard {
                     HStack {
                         SYSYLogoView()
-                            .resizable()
-                            .scaledToFit()
                             .frame(width: 70, height: 70)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         VStack(alignment: .leading) {
