@@ -2443,7 +2443,7 @@ struct PaymentsView: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text("মোট পাওনা").font(.headline)
-                            Text("৳ \(Int(store.data.totalDue))")
+                            Text("৳ \(Int(store.totalDue))")
                                 .font(.title2.bold())
                                 .foregroundStyle(.red)
                         }
@@ -2475,7 +2475,7 @@ struct PaymentsView: View {
                     HStack {
                         Text("Total Collected").bold()
                         Spacer()
-                        Text("৳ \(store.data.totalCollected, specifier: "%.2f")")
+                        Text("৳ \(store.totalCollected, specifier: "%.2f")")
                             .bold()
                             .foregroundStyle(Color.sysyGold)
                     }
