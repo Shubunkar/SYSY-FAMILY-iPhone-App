@@ -601,13 +601,14 @@ struct MeterCalculatorView: View {
 
 struct MeasurementView: View {
     @EnvironmentObject var store: AppDataStore
+    @State private var customerName = ""
     @State private var title = "Aluminium Window"
     @State private var width = ""
     @State private var height = ""
     @State private var quantity = "1"
     @State private var rate = ""
     @State private var selectedRate: RateItem?
-    @State private var savedItems: [Measurement] = []
+    @State private var saveMessage = ""
 
     private var sqft: Double {
         guard let w = Double(width), let h = Double(height), let q = Int(quantity) else { return 0 }
@@ -623,6 +624,7 @@ struct MeasurementView: View {
         NavigationStack {
             Form {
                 Section("কাজের তথ্য") {
+                    TextField("কাস্টমারের নাম", text: $customerName)
                     TextField("Door / Window নাম", text: $title)
                     TextField("Width (ft)", text: $width)
                         .keyboardType(.decimalPad)
@@ -665,16 +667,27 @@ struct MeasurementView: View {
                 }
 
                 Button {
-                    guard sqft > 0, total > 0 else { return }
-                    savedItems.append(
-                        Measurement(
-                            title: title,
-                            width: Double(width) ?? 0,
-                            height: Double(height) ?? 0,
-                            quantity: Int(quantity) ?? 1,
-                            rate: Double(rate) ?? 0
+                    let name = customerName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let itemTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !name.isEmpty, !itemTitle.isEmpty, sqft > 0, total > 0,
+                          let savedWidth = Double(width),
+                          let savedHeight = Double(height),
+                          let savedRate = Double(rate),
+                          let savedQuantity = Int(quantity), savedQuantity > 0 else {
+                        saveMessage = "কাস্টমারের নাম, সঠিক মাপ, Quantity ও Rate দিন।"
+                        return
+                    }
+                    store.data.measurements.append(
+                        CustomerMeasurement(
+                            customerName: name,
+                            title: itemTitle,
+                            width: savedWidth,
+                            height: savedHeight,
+                            quantity: savedQuantity,
+                            rate: savedRate
                         )
                     )
+                    saveMessage = "হিসাব সেভ হয়েছে।"
                     width = ""
                     height = ""
                     quantity = "1"
@@ -684,15 +697,24 @@ struct MeasurementView: View {
                         .frame(maxWidth: .infinity)
                 }
 
-                if !savedItems.isEmpty {
-                    Section("Saved Measurements") {
-                        ForEach(savedItems) { item in
+                if !saveMessage.isEmpty {
+                    Section {
+                        Text(saveMessage)
+                            .font(.footnote)
+                            .foregroundStyle(saveMessage == "হিসাব সেভ হয়েছে।" ? .green : .red)
+                    }
+                }
+
+                if !store.data.measurements.isEmpty {
+                    Section("সেভ করা হিসাব") {
+                        ForEach(store.data.measurements.reversed()) { item in
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(item.title).font(.headline)
+                                Text(item.customerName).font(.headline)
+                                Text(item.title)
                                 Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.sqft, specifier: "%.2f") Sqft")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                Text("৳ \(item.total, specifier: "%.2f")")
+                                Text("৳ \(item.amount, specifier: "%.2f")")
                                     .bold()
                                     .foregroundStyle(Color.sysyGold)
                             }
