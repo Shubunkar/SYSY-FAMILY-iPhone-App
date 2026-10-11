@@ -38,9 +38,8 @@ jobs:
           cp "Theme.swift" "Generated/SYSY FAMILY/"
           cp "MainTabView.swift" "Generated/SYSY FAMILY/"
 
-          if [ -d "Assets.xcassets" ]; then
-            cp -R "Assets.xcassets" "Generated/SYSY FAMILY/"
-          fi
+          # App branding is drawn in SwiftUI; skip the incomplete legacy asset catalog
+          # (it has no AppIcon set and causes actool to fail).
 
           sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
           sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
