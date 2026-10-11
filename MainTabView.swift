@@ -153,18 +153,25 @@ struct StatCard: View {
 struct QuickAction: View {
     let title: String
     let icon: String
+    let action: () -> Void
+
     var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .frame(width: 28)
-                .foregroundStyle(Color.sysyGold)
-            Text(title)
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .frame(width: 28)
+                    .foregroundStyle(Color.sysyGold)
+                Text(title)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
-        .padding(.vertical, 4)
+        .buttonStyle(.plain)
     }
 }
 
