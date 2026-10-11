@@ -24,6 +24,7 @@ struct MainTabView: View {
                 .tabItem { Label("আরও", systemImage: "ellipsis") }
         }
         .tint(.sysyGold)
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 }
 
