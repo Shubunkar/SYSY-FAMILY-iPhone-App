@@ -328,6 +328,37 @@ final class AppDataStore: ObservableObject {
         }
     }
 
+    // Whole-value updates ensure create actions publish and persist immediately.
+    func addCustomer(_ customer: Customer) {
+        var updated = data
+        updated.customers.append(customer)
+        data = updated
+    }
+
+    func addMeasurement(_ measurement: CustomerMeasurement) {
+        var updated = data
+        updated.measurements.append(measurement)
+        data = updated
+    }
+
+    func addQuotation(_ quotation: BusinessQuotation) {
+        var updated = data
+        updated.quotations.append(quotation)
+        data = updated
+    }
+
+    func addPayment(_ payment: PaymentRecord) {
+        var updated = data
+        updated.payments.append(payment)
+        data = updated
+    }
+
+    func addRate(_ rate: RateItem) {
+        var updated = data
+        updated.rates.append(rate)
+        data = updated
+    }
+
     func clearAll() {
         data = PersistedAppData(customers: [], quotations: [], payments: [], rates: [], measurements: [])
     }
