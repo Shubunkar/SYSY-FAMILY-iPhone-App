@@ -10,6 +10,10 @@ private func formatAmount(_ value: Double) -> String {
     formatter.maximumFractionDigits = 2
     return formatter.string(from: NSNumber(value: value)) ?? String(value)
 }
+
+private func formatAmount(_ value: Int) -> String {
+    formatAmount(Double(value))
+}
 struct MainTabView: View {
     @EnvironmentObject var store: AppDataStore
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
