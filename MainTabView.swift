@@ -1,5 +1,15 @@
 import SwiftUI
 import PhotosUI
+
+/// Format Mauritian rupee amounts without unnecessary trailing zeroes.
+private func formatAmount(_ value: Double) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.locale = Locale(identifier: "en_MU")
+    formatter.minimumFractionDigits = 0
+    formatter.maximumFractionDigits = 2
+    return formatter.string(from: NSNumber(value: value)) ?? String(value)
+}
 struct MainTabView: View {
     @EnvironmentObject var store: AppDataStore
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
@@ -56,8 +66,8 @@ struct DashboardView: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         StatCard(title: "Customer", value: "\(store.data.customers.count)", icon: "person.2.fill")
                         StatCard(title: "Quotation", value: "\(store.data.quotations.count)", icon: "doc.text.fill")
-                        StatCard(title: "Collection", value: "৳ \(Int(store.totalCollected))", icon: "banknote")
-                        StatCard(title: "পাওনা", value: "৳ \(Int(store.totalDue))", icon: "exclamationmark.circle")
+                        StatCard(title: "Collection", value: "MUR \(formatAmount(store.totalCollected))", icon: "banknote")
+                        StatCard(title: "পাওনা", value: "MUR \(formatAmount(store.totalDue))", icon: "exclamationmark.circle")
                     }
 
                     AppCard {
@@ -87,7 +97,7 @@ struct DashboardView: View {
                                         }
                                         Spacer()
                                         VStack(alignment: .trailing, spacing: 2) {
-                                            Text("৳\(quotation.grandTotal, specifier: "%.0f")").font(.subheadline.bold())
+                                            Text("MUR\(formatAmount(quotation.grandTotal))").font(.subheadline.bold())
                                             Text(quotation.createdAt.formatted(date: .abbreviated, time: .omitted)).font(.caption2).foregroundStyle(.secondary)
                                         }
                                     }
@@ -207,7 +217,7 @@ struct CustomersView: View {
                 Button { showAdd = true } label: { Image(systemName: "plus") }
             }
             .sheet(isPresented: $showAdd) {
-                AddCustomerView { customer in store.data.customers.append(customer) }
+                AddCustomerView { customer in store.addCustomer(customer) }
             }
             .confirmationDialog(
                 "Customer Delete",
@@ -344,7 +354,7 @@ struct CustomerMeasurementFlowView: View {
                     Picker("Saved Rate", selection: $selectedRate) {
                         Text("নিজে Rate লিখুন").tag(Optional<RateItem>.none)
                         ForEach(store.data.rates) { item in
-                            Text("\(item.name) — ৳\(item.rate, specifier: "%.2f")")
+                            Text("\(formatAmount(item.name) — MUR\(item.rate))")
                                 .tag(Optional(item))
                         }
                     }
@@ -367,7 +377,7 @@ struct CustomerMeasurementFlowView: View {
                     HStack {
                         Text("Amount")
                         Spacer()
-                        Text("৳ \(amount, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(amount))")
                             .bold()
                             .foregroundStyle(Color.sysyGold)
                     }
@@ -390,7 +400,7 @@ struct CustomerMeasurementFlowView: View {
                             quantity: Int(quantity) ?? 1,
                             rate: Double(rate) ?? 0
                         )
-                        store.data.measurements.append(item)
+                        store.addMeasurement(item)
 
                         width = ""
                         height = ""
@@ -409,7 +419,7 @@ struct CustomerMeasurementFlowView: View {
                                 Text(item.title).font(.headline)
                                 Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.sqft, specifier: "%.2f") Sqft")
                                     .font(.caption)
-                                Text("৳ \(item.amount, specifier: "%.2f")")
+                                Text("MUR \(formatAmount(item.amount))")
                                     .bold()
                                     .foregroundStyle(Color.sysyGold)
                             }
@@ -474,7 +484,7 @@ struct FlowQuotationView: View {
                     HStack {
                         Text(item.title)
                         Spacer()
-                        Text("৳ \(item.amount, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(item.amount))")
                     }
                 }
             }
@@ -508,7 +518,7 @@ struct FlowQuotationView: View {
                     advance: advanceValue,
                     advanceDate: advanceValue > 0 ? Date() : nil
                 )
-                store.data.quotations.append(quotation)
+                store.addQuotation(quotation)
                 saved = true
             }
             .disabled(saved)
@@ -576,7 +586,7 @@ struct MeterCalculatorView: View {
                     HStack {
                         Text("Total Amount")
                         Spacer()
-                        Text("৳ \(amount, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(amount))")
                             .bold()
                             .foregroundStyle(Color.sysyGold)
                     }
@@ -635,7 +645,7 @@ struct MeasurementView: View {
                     Picker("Saved Rate", selection: $selectedRate) {
                         Text("নিজে Rate লিখুন").tag(Optional<RateItem>.none)
                         ForEach(store.data.rates) { item in
-                            Text("\(item.name) — ৳\(item.rate, specifier: "%.2f")")
+                            Text("\(formatAmount(item.name) — MUR\(item.rate))")
                                 .tag(Optional(item))
                         }
                     }
@@ -660,7 +670,7 @@ struct MeasurementView: View {
                     HStack {
                         Text("Total Amount")
                         Spacer()
-                        Text("৳ \(total, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(total))")
                             .bold()
                             .foregroundStyle(Color.sysyNavy)
                     }
@@ -677,7 +687,7 @@ struct MeasurementView: View {
                         saveMessage = "কাস্টমারের নাম, সঠিক মাপ, Quantity ও Rate দিন।"
                         return
                     }
-                    store.data.measurements.append(
+                    store.addMeasurement(
                         CustomerMeasurement(
                             customerName: name,
                             title: itemTitle,
@@ -714,7 +724,7 @@ struct MeasurementView: View {
                                 Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.sqft, specifier: "%.2f") Sqft")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                Text("৳ \(item.amount, specifier: "%.2f")")
+                                Text("MUR \(formatAmount(item.amount))")
                                     .bold()
                                     .foregroundStyle(Color.sysyGold)
                             }
@@ -794,7 +804,7 @@ struct QuotationBuilderView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("৳ \(line.amount, specifier: "%.2f")")
+                            Text("MUR \(formatAmount(line.amount))")
                         }
                     }
                     .onDelete { lines.remove(atOffsets: $0) }
@@ -805,7 +815,7 @@ struct QuotationBuilderView: View {
                 HStack {
                     Text("Subtotal")
                     Spacer()
-                    Text("৳ \(subtotal, specifier: "%.2f")")
+                    Text("MUR \(formatAmount(subtotal))")
                 }
                 TextField("Discount", text: $discountText)
                     .keyboardType(.decimalPad)
@@ -824,14 +834,14 @@ struct QuotationBuilderView: View {
                 HStack {
                     Text("Grand Total").bold()
                     Spacer()
-                    Text("৳ \(grandTotal, specifier: "%.2f")")
+                    Text("MUR \(formatAmount(grandTotal))")
                         .bold()
                         .foregroundStyle(Color.sysyGold)
                 }
                 HStack {
                     Text("বাকি").bold()
                     Spacer()
-                    Text("৳ \(balance, specifier: "%.2f")")
+                    Text("MUR \(formatAmount(balance))")
                         .bold()
                         .foregroundStyle(.red)
                 }
@@ -853,7 +863,7 @@ struct QuotationBuilderView: View {
                     QuotationPreviewView(quotation: quotation)
                         .onAppear {
                             if !store.data.quotations.contains(where: { $0.number == quotation.number }) {
-                                store.data.quotations.append(quotation)
+                                store.addQuotation(quotation)
                             }
                         }
                 }
@@ -990,16 +1000,16 @@ struct PDFShareSheet: UIViewControllerRepresentable {
             for line in quotation.lines {
                 drawText(line.title, font: .boldSystemFont(ofSize: 12), spacingAfter: 2)
                 drawText(line.description, font: .systemFont(ofSize: 10), color: .secondaryLabel, spacingAfter: 2)
-                drawText("Amount: ৳ \(String(format: "%.2f", line.amount))", font: .systemFont(ofSize: 12), spacingAfter: 7)
+                drawText("Amount: MUR \(formatAmount(line.amount))", font: .systemFont(ofSize: 12), spacingAfter: 7)
             }
 
             y += 5
             drawRule()
-            drawText("Subtotal: ৳ \(String(format: "%.2f", quotation.subtotal))", font: .systemFont(ofSize: 12), spacingAfter: 3)
-            drawText("Discount: ৳ \(String(format: "%.2f", quotation.discount))", font: .systemFont(ofSize: 12), spacingAfter: 3)
-            drawText("Grand Total: ৳ \(String(format: "%.2f", quotation.grandTotal))", font: .boldSystemFont(ofSize: 14), spacingAfter: 3)
-            drawText("Advance: ৳ \(String(format: "%.2f", quotation.advance))", font: .systemFont(ofSize: 12), spacingAfter: 3)
-            drawText("Balance Due: ৳ \(String(format: "%.2f", quotation.balance))", font: .boldSystemFont(ofSize: 14), spacingAfter: 10)
+            drawText("Subtotal: MUR \(formatAmount(quotation.subtotal))", font: .systemFont(ofSize: 12), spacingAfter: 3)
+            drawText("Discount: MUR \(formatAmount(quotation.discount))", font: .systemFont(ofSize: 12), spacingAfter: 3)
+            drawText("Grand Total: MUR \(formatAmount(quotation.grandTotal))", font: .boldSystemFont(ofSize: 14), spacingAfter: 3)
+            drawText("Advance: MUR \(formatAmount(quotation.advance))", font: .systemFont(ofSize: 12), spacingAfter: 3)
+            drawText("Balance Due: MUR \(formatAmount(quotation.balance))", font: .boldSystemFont(ofSize: 14), spacingAfter: 10)
 
             drawText("TERMS & CONDITIONS", font: .boldSystemFont(ofSize: 11), color: UIColor.systemBlue, spacingAfter: 4)
             drawText("• Final measurement will be confirmed before production.", font: .systemFont(ofSize: 10), spacingAfter: 3)
@@ -1155,7 +1165,7 @@ struct QuotationPreviewView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("৳ \(line.amount, specifier: "%.2f")")
+                            Text("MUR \(formatAmount(line.amount))")
                                 .font(.subheadline.bold())
                         }
                         .padding(10)
@@ -1246,7 +1256,7 @@ struct SummaryRow: View {
         HStack {
             Text(title).fontWeight(emphasized ? .bold : .regular)
             Spacer()
-            Text("৳ \(value, specifier: "%.2f")")
+            Text("MUR \(formatAmount(value))")
                 .fontWeight(emphasized ? .bold : .regular)
                 .foregroundStyle(emphasized ? Color.sysyGold : .primary)
         }
@@ -1405,11 +1415,11 @@ struct QuotesView: View {
                                             .foregroundStyle(quote.status.uiColor)
                                             .clipShape(Capsule())
                                         }
-                                        Text("৳ \(quote.grandTotal, specifier: "%.0f")")
+                                        Text("MUR \(formatAmount(quote.grandTotal))")
                                             .bold().foregroundStyle(Color.sysyGold)
                                     }
                                     Text(quote.customerName)
-                                    Text("Advance: ৳ \(quote.appliedAdvance, specifier: "%.0f") • বাকি: ৳ \(quote.balance, specifier: "%.0f")")
+                                    Text("Advance: MUR \(formatAmount(quote.appliedAdvance)) • বাকি: MUR \(formatAmount(quote.balance))")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                     Text(quote.createdAt.formatted(date: .abbreviated, time: .omitted))
@@ -1448,7 +1458,7 @@ struct QuotesView: View {
                     HStack {
                         Label("\(filteredQuotes.count) টি", systemImage: "doc.text")
                         Spacer()
-                        Text("মোট ৳ \(filteredTotal, specifier: "%.0f")")
+                        Text("মোট MUR \(formatAmount(filteredTotal))")
                             .fontWeight(.semibold)
                     }
                     .font(.caption)
@@ -1595,19 +1605,19 @@ struct EditQuotationView: View {
                     HStack {
                         Text(line.title)
                         Spacer()
-                        Text("৳ \(line.amount, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(line.amount))")
                     }
                 }
                 .onDelete { lines.remove(atOffsets: $0) }
             }
 
             Section("Payment") {
-                HStack { Text("Subtotal"); Spacer(); Text("৳ \(subtotal, specifier: "%.2f")") }
+                HStack { Text("Subtotal"); Spacer(); Text("MUR \(formatAmount(subtotal))") }
                 TextField("Discount", text: $discountText).keyboardType(.decimalPad)
                 if discount > subtotal { Text("Discount subtotal-এর চেয়ে বেশি হতে পারবে না").font(.caption).foregroundStyle(.red) }
                 TextField("Advance", text: $advanceText).keyboardType(.decimalPad)
                 if advance > grandTotal { Text("Advance Grand Total-এর চেয়ে বেশি হতে পারবে না").font(.caption).foregroundStyle(.red) }
-                HStack { Text("Grand Total").bold(); Spacer(); Text("৳ \(grandTotal, specifier: "%.2f")").bold() }
+                HStack { Text("Grand Total").bold(); Spacer(); Text("MUR \(formatAmount(grandTotal))").bold() }
             }
 
             if !errorMessage.isEmpty {
@@ -1711,18 +1721,18 @@ struct QuoteDetailView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(item.title)
-                                    Text("\(item.sqft, specifier: "%.1f") Sqft × ৳\(Int(item.rate))")
+                                    Text("\(item.sqft, specifier: "%.1f") Sqft × MUR\(formatAmount(item.rate))")
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text("৳\(Int(item.amount))")
+                                Text("MUR\(formatAmount(item.amount))")
                             }
                         }
                         Divider()
                         HStack {
                             Text("Grand Total").bold()
                             Spacer()
-                            Text("৳ \(Int(quote.subtotal))").bold().foregroundStyle(Color.sysyGold)
+                            Text("MUR \(formatAmount(quote.subtotal))").bold().foregroundStyle(Color.sysyGold)
                         }
                     }
                 }
@@ -1887,8 +1897,8 @@ struct CustomerAccountDetailsView: View {
                             Text(quote.createdAt.formatted(date: .abbreviated, time: .omitted))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            Text("Grand Total: ৳ \(quote.grandTotal, specifier: "%.2f")")
-                            Text("Advance: ৳ \(quote.appliedAdvance, specifier: "%.2f") • Balance: ৳ \(quote.balance, specifier: "%.2f")")
+                            Text("Grand Total: MUR \(formatAmount(quote.grandTotal))")
+                            Text("Advance: MUR \(formatAmount(quote.appliedAdvance)) • Balance: MUR \(formatAmount(quote.balance))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -1917,7 +1927,7 @@ struct CustomerAccountDetailsView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("৳ \(payment.amount, specifier: "%.2f")")
+                            Text("MUR \(formatAmount(payment.amount))")
                                 .bold()
                                 .foregroundStyle(.green)
                         }
@@ -2015,7 +2025,7 @@ struct AccountAmountRow: View {
         HStack {
             Text(title)
             Spacer()
-            Text("৳ \(amount, specifier: "%.2f")")
+            Text("MUR \(formatAmount(amount))")
                 .bold()
                 .foregroundStyle(color)
         }
@@ -2070,8 +2080,8 @@ struct CustomerHistoryView: View {
                             Text(quote.createdAt.formatted(date: .abbreviated, time: .omitted))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            Text("Grand Total: ৳ \(quote.grandTotal, specifier: "%.2f")")
-                            Text("Advance: ৳ \(quote.appliedAdvance, specifier: "%.2f") • Balance: ৳ \(quote.balance, specifier: "%.2f")")
+                            Text("Grand Total: MUR \(formatAmount(quote.grandTotal))")
+                            Text("Advance: MUR \(formatAmount(quote.appliedAdvance)) • Balance: MUR \(formatAmount(quote.balance))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -2101,7 +2111,7 @@ struct CustomerHistoryView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("৳ \(payment.amount, specifier: "%.2f")")
+                            Text("MUR \(formatAmount(payment.amount))")
                                 .bold()
                                 .foregroundStyle(.green)
                         }
@@ -2122,7 +2132,7 @@ struct HistoryMoneyRow: View {
         HStack {
             Text(title)
             Spacer()
-            Text("৳ \(value, specifier: "%.2f")")
+            Text("MUR \(formatAmount(value))")
                 .bold()
                 .foregroundStyle(color)
         }
@@ -2187,13 +2197,13 @@ struct PaymentTrackingView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Customer Due")
                             if customerAdvance > 0 {
-                                Text("Quotation advance: ৳ \(customerAdvance, specifier: "%.2f")")
+                                Text("Quotation advance: MUR \(formatAmount(customerAdvance))")
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
                         }
                         Spacer()
-                        Text("৳ \(customerDue, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(customerDue))")
                             .bold()
                             .foregroundStyle(customerDue > 0 ? .red : .green)
                     }
@@ -2208,12 +2218,12 @@ struct PaymentTrackingView: View {
                     }
 
                     if customerSales > 0 && value > customerDue + 0.01 {
-                        validationMessage = "এই customer-এর বাকি ৳\(String(format: "%.2f", customerDue))। এর বেশি payment যোগ করা যাবে না।"
+                        validationMessage = "এই customer-এর বাকি MUR\(formatAmount(customerDue))। এর বেশি payment যোগ করা যাবে না।"
                         showValidation = true
                         return
                     }
 
-                    store.data.payments.append(
+                    store.addPayment(
                         PaymentRecord(
                             customerName: name,
                             amount: value,
@@ -2236,7 +2246,7 @@ struct PaymentTrackingView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text("৳ \(totalPaid, specifier: "%.2f")")
+                    Text("MUR \(formatAmount(totalPaid))")
                         .bold()
                         .foregroundStyle(.green)
                 }
@@ -2255,7 +2265,7 @@ struct PaymentTrackingView: View {
                             }
                         }
                         Spacer()
-                        Text("৳ \(payment.amount, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(payment.amount))")
                             .foregroundStyle(.green)
                     }
                 }
@@ -2463,7 +2473,7 @@ struct PaymentsView: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text("মোট পাওনা").font(.headline)
-                            Text("৳ \(Int(store.totalDue))")
+                            Text("MUR \(formatAmount(store.totalDue))")
                                 .font(.title2.bold())
                                 .foregroundStyle(.red)
                         }
@@ -2477,25 +2487,25 @@ struct PaymentsView: View {
                     HStack {
                         Text("Quotation Advance")
                         Spacer()
-                        Text("৳ \(store.totalAdvanceCollected, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(store.totalAdvanceCollected))")
                             .foregroundStyle(.green)
                     }
                     HStack {
                         Text("Payment Records")
                         Spacer()
-                        Text("৳ \(store.data.payments.reduce(0) { $0 + $1.amount }, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(store.data.payments.reduce(0) { $0 + $1.amount }))")
                             .foregroundStyle(.green)
                     }
                     HStack {
                         Text("এই মাসের Collection")
                         Spacer()
-                        Text("৳ \(store.monthlyCollection, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(store.monthlyCollection))")
                             .foregroundStyle(.green)
                     }
                     HStack {
                         Text("Total Collected").bold()
                         Spacer()
-                        Text("৳ \(store.totalCollected, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(store.totalCollected))")
                             .bold()
                             .foregroundStyle(Color.sysyGold)
                     }
@@ -2538,7 +2548,7 @@ struct PaymentRow: View {
                 Text(date).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Text("৳ \(amount)")
+            Text("MUR \(formatAmount(amount))")
                 .foregroundStyle(.green)
                 .bold()
         }
@@ -2563,7 +2573,7 @@ struct RateListView: View {
                             Text("প্রতি \(item.unit)").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text("৳ \(item.rate, specifier: "%.2f")")
+                        Text("MUR \(formatAmount(item.rate))")
                             .bold()
                             .foregroundStyle(Color.sysyGold)
                     }
@@ -2582,7 +2592,7 @@ struct RateListView: View {
                 Button("Rate Save করুন") {
                     guard !newName.trimmingCharacters(in: .whitespaces).isEmpty,
                           let value = Double(newRate) else { return }
-                    store.data.rates.append(RateItem(name: newName, unit: newUnit, rate: value))
+                    store.addRate(RateItem(name: newName, unit: newUnit, rate: value))
                     newName = ""
                     newRate = ""
                 }
