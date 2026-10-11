@@ -354,7 +354,7 @@ struct CustomerMeasurementFlowView: View {
                     Picker("Saved Rate", selection: $selectedRate) {
                         Text("নিজে Rate লিখুন").tag(Optional<RateItem>.none)
                         ForEach(store.data.rates) { item in
-                            Text("\(formatAmount(item.name) — MUR\(item.rate))")
+                            Text("\(item.name) — MUR\(formatAmount(item.rate))")
                                 .tag(Optional(item))
                         }
                     }
@@ -645,7 +645,7 @@ struct MeasurementView: View {
                     Picker("Saved Rate", selection: $selectedRate) {
                         Text("নিজে Rate লিখুন").tag(Optional<RateItem>.none)
                         ForEach(store.data.rates) { item in
-                            Text("\(formatAmount(item.name) — MUR\(item.rate))")
+                            Text("\(item.name) — MUR\(formatAmount(item.rate))")
                                 .tag(Optional(item))
                         }
                     }
