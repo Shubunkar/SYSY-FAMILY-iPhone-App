@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'MainTabView.swift'
+      - 'Assets.xcassets/**'
       - '.github/workflows/build-unsigned-ipa.yml'
 
 jobs:
