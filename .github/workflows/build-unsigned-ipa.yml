@@ -2,6 +2,10 @@ name: Build SYSY FAMILY V63 IPA
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'MainTabView.swift'
+      - '.github/workflows/build-unsigned-ipa.yml'
 
 jobs:
   build:
