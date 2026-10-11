@@ -7,14 +7,14 @@ struct Customer: Identifiable, Codable, Hashable {
     var projectAddress: String = ""
     var siteNote: String = ""
     var photoFileNames: [String] = []
-    let id = UUID()
+    var id = UUID()
     var name: String
     var phone: String
     var address: String
 }
 
 struct QuoteItem: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var title: String
     var width: Double
     var height: Double
@@ -26,7 +26,7 @@ struct QuoteItem: Identifiable, Codable {
 }
 
 struct Quote: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var number: String
     var customer: Customer
     var items: [QuoteItem]
@@ -74,7 +74,7 @@ struct BackupData: Codable {
 }
 
 struct RateItem: Identifiable, Codable, Hashable {
-    let id = UUID()
+    var id = UUID()
     var name: String
     var unit: String
     var rate: Double
@@ -90,7 +90,7 @@ final class RateStore: ObservableObject {
 }
 
 struct Measurement: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var title: String
     var width: Double
     var height: Double
@@ -107,7 +107,7 @@ struct Measurement: Identifiable, Codable {
 }
 
 struct QuotationLine: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var title: String
     var description: String
     var amount: Double
@@ -218,7 +218,7 @@ struct BusinessQuotation: Identifiable, Codable {
 }
 
 struct PaymentRecord: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var customerName: String
     var amount: Double
     var date: Date
@@ -226,7 +226,7 @@ struct PaymentRecord: Identifiable, Codable {
 }
 
 struct CustomerAccount: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var customer: Customer
     var quotations: [BusinessQuotation]
     var payments: [PaymentRecord]
@@ -468,7 +468,7 @@ extension AppDataStore {
 }
 
 struct CustomerMeasurement: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var customerName: String
     var title: String
     var width: Double
