@@ -2457,7 +2457,7 @@ struct PaymentsView: View {
                     HStack {
                         Text("Quotation Advance")
                         Spacer()
-                        Text("৳ \(store.data.totalAdvanceCollected, specifier: "%.2f")")
+                        Text("৳ \(store.totalAdvanceCollected, specifier: "%.2f")")
                             .foregroundStyle(.green)
                     }
                     HStack {
