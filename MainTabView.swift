@@ -1022,7 +1022,7 @@ struct QuotationPreviewView: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Company header
                 HStack(alignment: .top, spacing: 14) {
-                    Image("Logo")
+                    SYSYLogoView()
                         .resizable()
                         .scaledToFit()
                         .frame(width: 74, height: 74)
@@ -1668,7 +1668,7 @@ struct QuoteDetailView: View {
             VStack(spacing: 16) {
                 AppCard {
                     HStack {
-                        Image("Logo")
+                        SYSYLogoView()
                             .resizable()
                             .scaledToFit()
                             .frame(width: 70, height: 70)
@@ -2611,6 +2611,8 @@ struct EditRateView: View {
 }
 
 struct SettingsView: View {
+    @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
+
     var body: some View {
         NavigationStack {
             List {
@@ -2639,14 +2641,20 @@ struct SettingsView: View {
                     NavigationLink(destination: BackupView()) {
                         Label("ডাটা Backup", systemImage: "icloud")
                     }
-                    Label("ভাষা / Language", systemImage: "globe")
+                    Picker(selection: $selectedLanguage) {
+                        Text("বাংলা").tag("bn")
+                        Text("English").tag("en")
+                    } label: {
+                        Label("ভাষা / Language", systemImage: "globe")
+                    }
                 }
                 Section {
                     Label("সাহায্য ও সাপোর্ট", systemImage: "questionmark.circle")
                     Label("অ্যাপ সম্পর্কে", systemImage: "info.circle")
                 }
             }
-            .navigationTitle("আরও")
+            .navigationTitle(selectedLanguage == "en" ? "More" : "আরও")
         }
+        .environment(\.locale, Locale(identifier: selectedLanguage))
     }
 }
