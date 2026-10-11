@@ -457,7 +457,8 @@ struct CustomerMeasurementFlowView: View {
             }
             .navigationTitle("Customer → Measurement")
             .sheet(isPresented: $showMeterCalculator) {
-                MeterCalculatorView()
+                MeterCalculatorView(customer: selectedCustomer)
+                    .environmentObject(store)
             }
             .sheet(isPresented: $showQuotation) {
                 NavigationStack {
@@ -558,6 +559,9 @@ struct FlowQuotationView: View {
 
 struct MeterCalculatorView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var store: AppDataStore
+    let customer: Customer?
+    @State private var title = "Aluminium Window"
     @State private var width = ""
     @State private var height = ""
     @State private var quantity = "1"
@@ -579,6 +583,7 @@ struct MeterCalculatorView: View {
         NavigationStack {
             Form {
                 Section("Meter Measurement") {
+                    TextField("Door / Window নাম", text: $title)
                     TextField("Width (meter)", text: $width)
                         .keyboardType(.decimalPad)
                     TextField("Height (meter)", text: $height)
@@ -612,6 +617,43 @@ struct MeterCalculatorView: View {
                 }
 
                 Section {
+                    Button {
+                        guard let customer,
+                              let savedWidth = Double(width),
+                              let savedHeight = Double(height),
+                              let savedQuantity = Int(quantity),
+                              let savedRate = Double(rate),
+                              !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                              savedWidth > 0, savedHeight > 0, savedQuantity > 0, savedRate > 0 else {
+                            return
+                        }
+
+                        // Save using the existing sqft-based model while preserving the entered M² total.
+                        let widthFeet = savedWidth * 3.280839895
+                        let heightFeet = savedHeight * 3.280839895
+                        let equivalentRatePerSqft = savedRate / 10.7639104167
+                        store.addMeasurement(
+                            CustomerMeasurement(
+                                customerName: customer.name,
+                                title: "\(title.trimmingCharacters(in: .whitespacesAndNewlines)) (Meter)",
+                                width: widthFeet,
+                                height: heightFeet,
+                                quantity: savedQuantity,
+                                rate: equivalentRatePerSqft
+                            )
+                        )
+                        dismiss()
+                    } label: {
+                        Label("হিসাব Save করুন", systemImage: "square.and.arrow.down")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(customer == nil || (Double(width) ?? 0) <= 0 || (Double(height) ?? 0) <= 0 || (Double(rate) ?? 0) <= 0 || (Int(quantity) ?? 0) <= 0)
+
+                    if customer == nil {
+                        Text("এই হিসাব সেভ করতে আগে Work স্ক্রিনে Customer নির্বাচন করুন।")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                     Text("এখানে Meter ও Square Meter-এর হিসাব হবে। Running Meter এই অ্যাপে রাখা হয়নি।")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
