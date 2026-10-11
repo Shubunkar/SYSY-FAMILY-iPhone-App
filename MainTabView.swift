@@ -13,26 +13,33 @@ private func formatAmount(_ value: Double) -> String {
 struct MainTabView: View {
     @EnvironmentObject var store: AppDataStore
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
+    @State private var selectedTab = 0
 
     var body: some View {
-        TabView {
-            DashboardView()
+        TabView(selection: $selectedTab) {
+            DashboardView(onQuickAction: { selectedTab = $0 })
                 .tabItem { Label(selectedLanguage == "en" ? "Home" : "হোম", systemImage: "house.fill") }
+                .tag(0)
 
             CustomersView()
                 .tabItem { Label(selectedLanguage == "en" ? "Customers" : "কাস্টমার", systemImage: "person.2.fill") }
+                .tag(1)
 
             CustomerMeasurementFlowView()
                 .tabItem { Label(selectedLanguage == "en" ? "Work" : "কাজ", systemImage: "ruler.and.arrowtriangle.2.inward") }
+                .tag(2)
 
             QuotesView()
                 .tabItem { Label(selectedLanguage == "en" ? "Quotations" : "কোটেশন", systemImage: "doc.text.fill") }
+                .tag(3)
 
             PaymentsView()
                 .tabItem { Label(selectedLanguage == "en" ? "Accounts" : "হিসাব", systemImage: "creditcard.fill") }
+                .tag(4)
 
             SettingsView()
                 .tabItem { Label(selectedLanguage == "en" ? "More" : "আরও", systemImage: "ellipsis") }
+                .tag(5)
         }
         .tint(.sysyGold)
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
@@ -41,6 +48,7 @@ struct MainTabView: View {
 
 struct DashboardView: View {
     @EnvironmentObject var store: AppDataStore
+    let onQuickAction: (Int) -> Void
 
     var body: some View {
         NavigationStack {
@@ -97,7 +105,7 @@ struct DashboardView: View {
                                         }
                                         Spacer()
                                         VStack(alignment: .trailing, spacing: 2) {
-                                            Text("MUR\(formatAmount(quotation.grandTotal))").font(.subheadline.bold())
+                                            Text("MUR \(formatAmount(quotation.grandTotal))").font(.subheadline.bold())
                                             Text(quotation.createdAt.formatted(date: .abbreviated, time: .omitted)).font(.caption2).foregroundStyle(.secondary)
                                         }
                                     }
@@ -110,10 +118,10 @@ struct DashboardView: View {
                     AppCard {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("দ্রুত কাজ").font(.headline)
-                            QuickAction(title: "নতুন কাস্টমার", icon: "person.badge.plus")
-                            QuickAction(title: "নতুন Measurement", icon: "ruler")
-                            QuickAction(title: "নতুন Quotation", icon: "doc.badge.plus")
-                            QuickAction(title: "Payment যোগ করুন", icon: "plus.circle")
+                            QuickAction(title: "নতুন কাস্টমার", icon: "person.badge.plus") { onQuickAction(1) }
+                            QuickAction(title: "নতুন Measurement", icon: "ruler") { onQuickAction(2) }
+                            QuickAction(title: "নতুন Quotation", icon: "doc.badge.plus") { onQuickAction(3) }
+                            QuickAction(title: "Payment যোগ করুন", icon: "plus.circle") { onQuickAction(4) }
                         }
                     }
                 }
@@ -354,7 +362,7 @@ struct CustomerMeasurementFlowView: View {
                     Picker("Saved Rate", selection: $selectedRate) {
                         Text("নিজে Rate লিখুন").tag(Optional<RateItem>.none)
                         ForEach(store.data.rates) { item in
-                            Text("\(item.name) — MUR\(formatAmount(item.rate))")
+                            Text("\(item.name) — MUR \(formatAmount(item.rate))")
                                 .tag(Optional(item))
                         }
                     }
@@ -645,7 +653,7 @@ struct MeasurementView: View {
                     Picker("Saved Rate", selection: $selectedRate) {
                         Text("নিজে Rate লিখুন").tag(Optional<RateItem>.none)
                         ForEach(store.data.rates) { item in
-                            Text("\(item.name) — MUR\(formatAmount(item.rate))")
+                            Text("\(item.name) — MUR \(formatAmount(item.rate))")
                                 .tag(Optional(item))
                         }
                     }
@@ -1721,11 +1729,11 @@ struct QuoteDetailView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(item.title)
-                                    Text("\(item.sqft, specifier: "%.1f") Sqft × MUR\(formatAmount(item.rate))")
+                                    Text("\(item.sqft, specifier: "%.1f") Sqft × MUR \(formatAmount(item.rate))")
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text("MUR\(formatAmount(item.amount))")
+                                Text("MUR \(formatAmount(item.amount))")
                             }
                         }
                         Divider()
@@ -2218,7 +2226,7 @@ struct PaymentTrackingView: View {
                     }
 
                     if customerSales > 0 && value > customerDue + 0.01 {
-                        validationMessage = "এই customer-এর বাকি MUR\(formatAmount(customerDue))। এর বেশি payment যোগ করা যাবে না।"
+                        validationMessage = "এই customer-এর বাকি MUR \(formatAmount(customerDue))। এর বেশি payment যোগ করা যাবে না।"
                         showValidation = true
                         return
                     }
