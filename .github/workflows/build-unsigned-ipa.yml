@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'MainTabView.swift'
+      - 'Models.swift'
+      - 'SYSY_FAMILYApp.swift'
       - 'Theme.swift'
       - 'Assets.xcassets/**'
       - '.github/workflows/build-unsigned-ipa.yml'
