@@ -3042,9 +3042,10 @@ struct PaymentsView: View {
                             if ledgerRows.isEmpty {
                                 Text(searchText.isEmpty ? "এখনও কোনো কাস্টমার নেই" : "কোনো কাস্টমার পাওয়া যায়নি")
                                     .foregroundStyle(.secondary)
-                                    .frame(width: 646, minHeight: 90)
+                                    .frame(width: 646, height: 90)
                             } else {
-                                ForEach(Array(ledgerRows.enumerated()), id: \.element.id) { index, row in
+                                ForEach(ledgerRows.indices, id: \.self) { index in
+                                    let row = ledgerRows[index]
                                     NavigationLink(destination: CustomerAccountDetailsView(customer: row.customer)) {
                                         HStack(spacing: 0) {
                                             ledgerCell(row.lastDate?.formatted(date: .numeric, time: .omitted) ?? "—", width: 92)
