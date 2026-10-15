@@ -67,3 +67,32 @@ struct ProfileAvatar: View {
             .overlay(Circle().stroke(Color.sysyGold, lineWidth: 2))
     }
 }
+
+
+/// Branded opening screen shown when SYSY FAMILY starts.
+struct LaunchSplashView: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color.sysyNavy, Color(red: 0.04, green: 0.22, blue: 0.38)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            VStack(spacing: 18) {
+                SYSYLogoView()
+                    .frame(width: 150, height: 150)
+                    .shadow(color: .black.opacity(0.22), radius: 18, y: 8)
+                Text("SYSY FAMILY")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .tracking(1.5)
+                    .foregroundStyle(.white)
+                Text("Aluminium Doors & Windows")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.sysyGold)
+            }
+            .padding(24)
+        }
+        .ignoresSafeArea()
+        .accessibilityLabel("SYSY FAMILY opening screen")
+    }
+}
