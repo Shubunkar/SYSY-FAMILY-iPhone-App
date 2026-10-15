@@ -373,13 +373,15 @@ struct MeasurementSpreadsheetTable: View {
         ScrollView(.horizontal, showsIndicators: true) {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
+                    ForEach(columns.indices, id: \.self) { index in
+                        let column = columns[index]
                         cell(column.0, width: column.1, header: true, leading: column.2)
                     }
                 }
                 .background(Color.sysyNavy.opacity(0.12))
 
-                ForEach(Array(measurements.enumerated()), id: \.element.id) { index, item in
+                ForEach(measurements.indices, id: \.self) { index in
+                    let item = measurements[index]
                     HStack(spacing: 0) {
                         cell(item.title, width: 142, leading: true)
                         cell(String(format: "%.2f", item.width), width: 78)
@@ -388,14 +390,27 @@ struct MeasurementSpreadsheetTable: View {
                         cell(String(format: "%.2f", item.squareMeters), width: 82)
                         cell(formatAmount(item.rate), width: 92)
                         cell(formatAmount(item.amount), width: 104, bold: true)
-                        Button {
-                            onEdit(item)
-                        } label: {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 13, weight: .semibold))
-                                .frame(width: 64, height: 42)
+                        HStack(spacing: 0) {
+                            Button {
+                                onEdit(item)
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .frame(width: 32, height: 42)
+                            }
+                            .buttonStyle(.borderless)
+                            if let onDelete {
+                                Button(role: .destructive) {
+                                    onDelete(item)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .frame(width: 32, height: 42)
+                                }
+                                .buttonStyle(.borderless)
+                            }
                         }
-                        .buttonStyle(.borderless)
+                        .frame(width: 64)
                     }
                     .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
                     Divider()
@@ -420,7 +435,7 @@ struct MeasurementSpreadsheetTable: View {
             .foregroundStyle(header ? Color.sysyNavy : Color.primary)
             .lineLimit(2)
             .multilineTextAlignment(leading ? .leading : .trailing)
-            .frame(width: width, minHeight: 42, alignment: leading ? .leading : .trailing)
+            .frame(width: width).frame(minHeight: 42, alignment: leading ? .leading : .trailing)
             .padding(.horizontal, 6)
             .overlay(alignment: .trailing) {
                 Rectangle().fill(Color(.separator).opacity(0.45)).frame(width: 0.5)
