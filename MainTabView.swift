@@ -46,10 +46,43 @@ private func formatAmount(_ value: Double) -> String {
 private func formatAmount(_ value: Int) -> String {
     formatAmount(Double(value))
 }
+struct SYSYNavigationStack<Content: View>: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("SYSY_FAMILY_SELECTED_TAB") private var selectedTab = 0
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        NavigationStack {
+            content
+                .toolbar {
+                    ToolbarItemGroup(placement: .topBarLeading) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Label("Back", systemImage: "chevron.left")
+                        }
+                        .accessibilityLabel("Back")
+
+                        Button {
+                            selectedTab = 0
+                        } label: {
+                            Label("Home", systemImage: "house.fill")
+                        }
+                        .accessibilityLabel("Home")
+                    }
+                }
+        }
+    }
+}
+
 struct MainTabView: View {
     @EnvironmentObject var store: AppDataStore
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
-    @State private var selectedTab = 0
+    @AppStorage("SYSY_FAMILY_SELECTED_TAB") private var selectedTab = 0
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -87,7 +120,7 @@ struct DashboardView: View {
     let onQuickAction: (Int) -> Void
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     AppCard {
@@ -259,7 +292,7 @@ struct CustomersView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Group {
                 if filteredCustomers.isEmpty {
                     ContentUnavailableView(
@@ -334,7 +367,7 @@ struct AddCustomerView: View {
     private var normalizedPhone: String { phone.filter { $0.isNumber } }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Form {
                 Section("কাস্টমার তথ্য") {
                     TextField("নাম", text: $name)
@@ -616,7 +649,7 @@ struct CustomerMeasurementFlowView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Form {
                 Section("১. Customer নির্বাচন") {
                     Picker("Customer", selection: $selectedCustomer) {
@@ -777,7 +810,7 @@ struct CustomerMeasurementFlowView: View {
                     .environmentObject(store)
             }
             .sheet(isPresented: $showQuotation) {
-                NavigationStack {
+                SYSYNavigationStack {
                     if let customer = selectedCustomer {
                         FlowQuotationView(
                             customer: customer,
@@ -896,7 +929,7 @@ struct MeterCalculatorView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Form {
                 Section("Meter Measurement") {
                     TextField("Door / Window নাম", text: $title)
@@ -1001,7 +1034,7 @@ struct MeasurementView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Form {
                 Section("কাজের তথ্য") {
                     TextField("কাস্টমারের নাম", text: $customerName)
@@ -1150,7 +1183,7 @@ struct EditMeasurementView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Form {
                 Section("Measurement Edit") {
                     TextField("Customer name", text: $customerName)
@@ -1850,7 +1883,7 @@ struct QuotesView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Group {
                 if filteredQuotes.isEmpty {
                     ContentUnavailableView(
@@ -2162,7 +2195,7 @@ struct QuoteDetailView: View {
             lines: quote.items.map { item in
                 QuotationLine(
                     title: item.title,
-                    description: "\(item.width, specifier: "%.2f") × \(item.height, specifier: "%.2f") × \(item.quantity)",
+                    description: String(format: "%.2f × %.2f × %d", item.width, item.height, item.quantity),
                     amount: item.amount
                 )
             },
@@ -3237,7 +3270,7 @@ struct PaymentsView: View {
     private var filteredDue: Double { ledgerRows.reduce(0) { $0 + $1.due } }
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -3454,7 +3487,7 @@ struct EditRateView: View {
     @State private var rateText = ""
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             Form {
                 Text(item.name).font(.headline)
                 TextField("Rate", text: $rateText)
@@ -3614,7 +3647,7 @@ struct SettingsView: View {
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
 
     var body: some View {
-        NavigationStack {
+        SYSYNavigationStack {
             List {
                 Section {
                     HStack {
