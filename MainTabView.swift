@@ -388,6 +388,7 @@ struct AddCustomerView: View {
 struct MeasurementSpreadsheetTable: View {
     let measurements: [CustomerMeasurement]
     let onEdit: (CustomerMeasurement) -> Void
+    let onUpdate: (CustomerMeasurement) -> Void
     var onDelete: ((CustomerMeasurement) -> Void)? = nil
 
     private let columns: [(String, CGFloat, Bool)] = [
@@ -398,7 +399,7 @@ struct MeasurementSpreadsheetTable: View {
         ("Area m²", 82, false),
         ("Rate/m²", 92, false),
         ("Total Rs", 104, false),
-        ("Edit", 64, false)
+        ("Save / Edit", 90, false)
     ]
 
     var body: some View {
@@ -410,40 +411,16 @@ struct MeasurementSpreadsheetTable: View {
                         cell(column.0, width: column.1, header: true, leading: column.2)
                     }
                 }
-                .background(Color.sysyNavy.opacity(0.12))
+                .background(Color.red)
+                .foregroundStyle(.white)
 
-                ForEach(measurements.indices, id: \.self) { index in
-                    let item = measurements[index]
-                    HStack(spacing: 0) {
-                        cell(item.title, width: 142, leading: true)
-                        cell(String(format: "%.2f", item.width), width: 78)
-                        cell(String(format: "%.2f", item.height), width: 78)
-                        cell(String(item.quantity), width: 48)
-                        cell(String(format: "%.2f", item.squareMeters), width: 82)
-                        cell(formatAmount(item.rate), width: 92)
-                        cell(formatAmount(item.amount), width: 104, bold: true)
-                        HStack(spacing: 0) {
-                            Button {
-                                onEdit(item)
-                            } label: {
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .frame(width: 32, height: 42)
-                            }
-                            .buttonStyle(.borderless)
-                            if let onDelete {
-                                Button(role: .destructive) {
-                                    onDelete(item)
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .frame(width: 32, height: 42)
-                                }
-                                .buttonStyle(.borderless)
-                            }
-                        }
-                        .frame(width: 64)
-                    }
+                ForEach(Array(measurements.enumerated()), id: \.element.id) { index, item in
+                    MeasurementSpreadsheetRow(
+                        measurement: item,
+                        onSave: onUpdate,
+                        onEdit: onEdit,
+                        onDelete: onDelete
+                    )
                     .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
                     Divider()
                 }
@@ -453,9 +430,9 @@ struct MeasurementSpreadsheetTable: View {
                     cell(String(format: "%.2f", measurements.reduce(0) { $0 + $1.squareMeters }), width: 82, header: true)
                     cell("—", width: 92, header: true)
                     cell(formatAmount(measurements.reduce(0) { $0 + $1.amount }), width: 104, header: true)
-                    cell("", width: 64, header: true)
+                    cell("", width: 90, header: true)
                 }
-                .background(Color.sysyGold.opacity(0.18))
+                .background(Color.red.opacity(0.12))
             }
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.separator).opacity(0.6), lineWidth: 1))
         }
@@ -464,7 +441,7 @@ struct MeasurementSpreadsheetTable: View {
     private func cell(_ value: String, width: CGFloat, header: Bool = false, leading: Bool = false, bold: Bool = false) -> some View {
         Text(value)
             .font(.system(size: 11, weight: header || bold ? .semibold : .regular))
-            .foregroundStyle(header ? Color.sysyNavy : Color.primary)
+            .foregroundStyle(header ? Color.white : Color.primary)
             .lineLimit(2)
             .multilineTextAlignment(leading ? .leading : .trailing)
             .frame(width: width).frame(minHeight: 42, alignment: leading ? .leading : .trailing)
@@ -472,6 +449,119 @@ struct MeasurementSpreadsheetTable: View {
             .overlay(alignment: .trailing) {
                 Rectangle().fill(Color(.separator).opacity(0.45)).frame(width: 0.5)
             }
+    }
+}
+
+private struct MeasurementSpreadsheetRow: View {
+    let measurement: CustomerMeasurement
+    let onSave: (CustomerMeasurement) -> Void
+    let onEdit: (CustomerMeasurement) -> Void
+    let onDelete: ((CustomerMeasurement) -> Void)?
+    @State private var title: String
+    @State private var width: String
+    @State private var height: String
+    @State private var quantity: String
+    @State private var rate: String
+
+    init(measurement: CustomerMeasurement, onSave: @escaping (CustomerMeasurement) -> Void, onEdit: @escaping (CustomerMeasurement) -> Void, onDelete: ((CustomerMeasurement) -> Void)?) {
+        self.measurement = measurement
+        self.onSave = onSave
+        self.onEdit = onEdit
+        self.onDelete = onDelete
+        _title = State(initialValue: measurement.title)
+        _width = State(initialValue: String(format: "%.2f", measurement.width))
+        _height = State(initialValue: String(format: "%.2f", measurement.height))
+        _quantity = State(initialValue: String(measurement.quantity))
+        _rate = State(initialValue: String(format: "%.2f", measurement.rate))
+    }
+
+    private var valid: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        (Double(width) ?? 0) > 0 &&
+        (Double(height) ?? 0) > 0 &&
+        (Int(quantity) ?? 0) > 0 &&
+        (Double(rate) ?? -1) >= 0
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            field($title, width: 142, leading: true)
+            field($width, width: 78, numeric: true)
+            field($height, width: 78, numeric: true)
+            field($quantity, width: 48, numeric: true, wholeNumber: true)
+            Text(String(format: "%.2f", calculatedArea))
+                .font(.system(size: 11))
+                .frame(width: 82, minHeight: 42, alignment: .trailing)
+                .padding(.horizontal, 6)
+            Text(formatAmount(calculatedAmount))
+                .font(.system(size: 11))
+                .frame(width: 92, minHeight: 42, alignment: .trailing)
+                .padding(.horizontal, 6)
+            Text(formatAmount(calculatedAmount))
+                .font(.system(size: 11, weight: .semibold))
+                .frame(width: 104, minHeight: 42, alignment: .trailing)
+                .padding(.horizontal, 6)
+            HStack(spacing: 0) {
+                Button {
+                    guard valid else { return }
+                    let updated = CustomerMeasurement(
+                        id: measurement.id,
+                        customerName: measurement.customerName,
+                        title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                        width: Double(width) ?? measurement.width,
+                        height: Double(height) ?? measurement.height,
+                        quantity: Int(quantity) ?? measurement.quantity,
+                        rate: Double(rate) ?? measurement.rate,
+                        unit: measurement.unit
+                    )
+                    onSave(updated)
+                } label: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(valid ? Color.green : Color.gray)
+                        .frame(width: 30, height: 42)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!valid)
+                Button {
+                    onEdit(measurement)
+                } label: {
+                    Image(systemName: "pencil")
+                        .frame(width: 28, height: 42)
+                }
+                .buttonStyle(.borderless)
+                if let onDelete {
+                    Button(role: .destructive) {
+                        onDelete(measurement)
+                    } label: {
+                        Image(systemName: "trash")
+                            .frame(width: 28, height: 42)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            .frame(width: 90)
+        }
+    }
+
+    private var calculatedArea: Double {
+        (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 0)
+    }
+
+    private var calculatedAmount: Double {
+        measurement.unit == "ft"
+            ? (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 0) * (Double(rate) ?? 0)
+            : calculatedArea * (Double(rate) ?? 0)
+    }
+
+    private func field(_ value: Binding<String>, width: CGFloat, numeric: Bool = false, wholeNumber: Bool = false, leading: Bool = false) -> some View {
+        TextField("", text: value)
+            .font(.system(size: 11))
+            .keyboardType(wholeNumber ? .numberPad : (numeric ? .decimalPad : .default))
+            .multilineTextAlignment(leading ? .leading : .trailing)
+            .textFieldStyle(.roundedBorder)
+            .frame(width: width - 8, height: 34)
+            .padding(.horizontal, 4)
+            .frame(width: width, minHeight: 42)
     }
 }
 
@@ -606,7 +696,14 @@ struct CustomerMeasurementFlowView: View {
                     } else {
                         MeasurementSpreadsheetTable(
                             measurements: customerMeasurements,
-                            onEdit: { editingMeasurement = $0 }
+                            onEdit: { editingMeasurement = $0 },
+                            onUpdate: { saved in
+                                var updated = store.data
+                                if let index = updated.measurements.firstIndex(where: { $0.id == saved.id }) {
+                                    updated.measurements[index] = saved
+                                    store.data = updated
+                                }
+                            }
                         )
                     }
                 }
@@ -989,6 +1086,13 @@ struct MeasurementView: View {
                         MeasurementSpreadsheetTable(
                             measurements: Array(store.data.measurements.reversed()),
                             onEdit: { editingMeasurement = $0 },
+                            onUpdate: { saved in
+                                var updated = store.data
+                                if let index = updated.measurements.firstIndex(where: { $0.id == saved.id }) {
+                                    updated.measurements[index] = saved
+                                    store.data = updated
+                                }
+                            },
                             onDelete: { measurementToDelete = $0 }
                         )
                     }
@@ -2376,6 +2480,13 @@ struct CustomerAccountDetailsView: View {
                     MeasurementSpreadsheetTable(
                         measurements: customerMeasurements,
                         onEdit: { editingCustomerMeasurement = $0 },
+                        onUpdate: { saved in
+                            var updated = store.data
+                            if let index = updated.measurements.firstIndex(where: { $0.id == saved.id }) {
+                                updated.measurements[index] = saved
+                                store.data = updated
+                            }
+                        },
                         onDelete: { customerMeasurementToDelete = $0 }
                     )
                 }
