@@ -316,7 +316,24 @@ final class AppDataStore: ObservableObject {
     init() {
         if let saved = UserDefaults.standard.data(forKey: key),
            let decoded = try? JSONDecoder().decode(PersistedAppData.self, from: saved) {
-            data = decoded
+            var migrated = decoded
+            var changed = false
+            for index in migrated.measurements.indices where migrated.measurements[index].unit == "ft" {
+                migrated.measurements[index].width *= 0.3048
+                migrated.measurements[index].height *= 0.3048
+                migrated.measurements[index].rate *= 10.7639104167
+                migrated.measurements[index].unit = "m"
+                changed = true
+            }
+            for index in migrated.rates.indices where migrated.rates[index].unit.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().contains("sqft") {
+                migrated.rates[index].rate *= 10.7639104167
+                migrated.rates[index].unit = "m²"
+                changed = true
+            }
+            data = migrated
+            if changed, let encoded = try? JSONEncoder().encode(migrated) {
+                UserDefaults.standard.set(encoded, forKey: key)
+            }
         } else {
             data = PersistedAppData(customers: [], quotations: [], payments: [], rates: [], measurements: [])
         }
@@ -370,7 +387,18 @@ final class AppDataStore: ObservableObject {
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: preRestoreKey)
         }
-        data = restoredData
+        var migrated = restoredData
+        for index in migrated.measurements.indices where migrated.measurements[index].unit == "ft" {
+            migrated.measurements[index].width *= 0.3048
+            migrated.measurements[index].height *= 0.3048
+            migrated.measurements[index].rate *= 10.7639104167
+            migrated.measurements[index].unit = "m"
+        }
+        for index in migrated.rates.indices where migrated.rates[index].unit.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().contains("sqft") {
+            migrated.rates[index].rate *= 10.7639104167
+            migrated.rates[index].unit = "m²"
+        }
+        data = migrated
     }
 
     var canUndoLastRestore: Bool {
@@ -468,15 +496,67 @@ extension AppDataStore {
 }
 
 struct CustomerMeasurement: Identifiable, Codable {
-    var id = UUID()
+    var id: UUID
     var customerName: String
     var title: String
+    /// Width and height are stored in metres for all new/current records.
     var width: Double
     var height: Double
     var quantity: Int
+    /// Rate per square metre for current records.
     var rate: Double
+    /// Missing unit means a legacy V63 record (feet and rate per square foot).
+    var unit: String
 
-    var sqft: Double { width * height * Double(quantity) }
-    var amount: Double { sqft * rate }
+    init(
+        id: UUID = UUID(),
+        customerName: String,
+        title: String,
+        width: Double,
+        height: Double,
+        quantity: Int,
+        rate: Double,
+        unit: String = "m"
+    ) {
+        self.id = id
+        self.customerName = customerName
+        self.title = title
+        self.width = width
+        self.height = height
+        self.quantity = quantity
+        self.rate = rate
+        self.unit = unit
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, customerName, title, width, height, quantity, rate, unit
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        customerName = try values.decode(String.self, forKey: .customerName)
+        title = try values.decode(String.self, forKey: .title)
+        width = try values.decode(Double.self, forKey: .width)
+        height = try values.decode(Double.self, forKey: .height)
+        quantity = try values.decode(Int.self, forKey: .quantity)
+        rate = try values.decode(Double.self, forKey: .rate)
+        unit = try values.decodeIfPresent(String.self, forKey: .unit) ?? "ft"
+    }
+
+    var squareMeters: Double {
+        unit == "ft"
+            ? width * height * Double(quantity) * 0.09290304
+            : width * height * Double(quantity)
+    }
+
+    /// Compatibility value for older screens that may still reference sqft.
+    var sqft: Double { squareMeters * 10.7639104167 }
+
+    var amount: Double {
+        unit == "ft"
+            ? width * height * Double(quantity) * rate
+            : squareMeters * rate
+    }
 }
 ```
