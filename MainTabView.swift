@@ -2,6 +2,38 @@ import SwiftUI
 import PhotosUI
 
 /// Format Mauritian rupee amounts without unnecessary trailing zeroes.
+
+/// Draw the same SYSY FAMILY door/window logo used in the app onto a PDF page.
+private func drawSYSYLogo(in rect: CGRect) {
+    let navy = UIColor(red: 0.015, green: 0.08, blue: 0.18, alpha: 1)
+    let gold = UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1)
+    let outer = UIBezierPath(roundedRect: rect, cornerRadius: min(rect.width * 0.16, 10))
+    navy.setFill()
+    outer.fill()
+
+    let inset = rect.width * 0.19
+    let doorY = rect.minY + rect.height * 0.12
+    let doorH = rect.height * 0.36
+    let doorW = rect.width * 0.25
+    let leftDoor = CGRect(x: rect.minX + inset, y: doorY, width: doorW, height: doorH)
+    let rightDoor = CGRect(x: rect.maxX - inset - doorW, y: doorY, width: doorW, height: doorH)
+    gold.setStroke()
+    UIBezierPath(roundedRect: leftDoor, cornerRadius: 2).stroke()
+    UIColor.white.setStroke()
+    UIBezierPath(roundedRect: rightDoor, cornerRadius: 2).stroke()
+
+    let sysyFont = UIFont.systemFont(ofSize: rect.height * 0.17, weight: .black)
+    let familyFont = UIFont.systemFont(ofSize: rect.height * 0.09, weight: .bold)
+    let sysy = "SYSY" as NSString
+    let family = "FAMILY" as NSString
+    let sysyAttrs: [NSAttributedString.Key: Any] = [.font: sysyFont, .foregroundColor: UIColor.white]
+    let familyAttrs: [NSAttributedString.Key: Any] = [.font: familyFont, .foregroundColor: gold]
+    let sysySize = sysy.size(withAttributes: sysyAttrs)
+    let familySize = family.size(withAttributes: familyAttrs)
+    sysy.draw(at: CGPoint(x: rect.midX - sysySize.width / 2, y: rect.minY + rect.height * 0.55), withAttributes: sysyAttrs)
+    family.draw(at: CGPoint(x: rect.midX - familySize.width / 2, y: rect.minY + rect.height * 0.77), withAttributes: familyAttrs)
+}
+
 private func formatAmount(_ value: Double) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
@@ -1223,13 +1255,8 @@ struct PDFShareSheet: UIViewControllerRepresentable {
 
             beginPage()
 
-            // Branded SYSY mark in the PDF header.
-            let logoLeft = CGRect(x: pageSize.width - margin - 42, y: y + 1, width: 18, height: 24)
-            let logoRight = CGRect(x: pageSize.width - margin - 21, y: y + 1, width: 18, height: 24)
-            UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
-            UIBezierPath(roundedRect: logoLeft, cornerRadius: 3).stroke()
-            UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1).setStroke()
-            UIBezierPath(roundedRect: logoRight, cornerRadius: 3).stroke()
+            // Full SYSY FAMILY logo on every exported quotation.
+            drawSYSYLogo(in: CGRect(x: pageSize.width - margin - 62, y: y, width: 54, height: 62))
 
             drawText(
                 "SYSY FAMILY",
@@ -2149,10 +2176,8 @@ struct CustomerSummaryPDFShareSheet: UIViewControllerRepresentable {
             }
 
             func drawHeader() {
-                // Small geometric SYSY brand mark, matching the app's navy/gold identity.
-                let mark = CGRect(x: page.width - margin - 25, y: y + 1, width: 25, height: 25)
-                UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
-                UIBezierPath(roundedRect: mark, cornerRadius: 4).stroke()
+                // Full SYSY FAMILY logo on the account/measurement PDF.
+                drawSYSYLogo(in: CGRect(x: page.width - margin - 58, y: y, width: 50, height: 58))
                 draw("SYSY FAMILY", size: 22, bold: true, color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1), gap: 2)
                 draw("Aluminium Door & Window Solutions", size: 11, gap: 2)
                 draw("Mobile: +230 5890 9358", size: 10, color: .darkGray, gap: 10)
@@ -2604,10 +2629,8 @@ struct PaymentReceiptPDFShareSheet: UIViewControllerRepresentable {
         let renderer = UIGraphicsPDFRenderer(bounds: page)
         return renderer.pdfData { context in
             context.beginPage()
-            // SYSY FAMILY brand mark.
-            let mark = CGRect(x: page.width - margin - 26, y: margin, width: 24, height: 24)
-            UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
-            UIBezierPath(roundedRect: mark, cornerRadius: 4).stroke()
+            // Full SYSY FAMILY logo on every payment receipt.
+            drawSYSYLogo(in: CGRect(x: page.width - margin - 58, y: margin, width: 50, height: 58))
 
             func draw(_ text: String, size: CGFloat = 12, bold: Bool = false, color: UIColor = .label, y: CGFloat) {
                 let font = bold ? UIFont.boldSystemFont(ofSize: size) : UIFont.systemFont(ofSize: size)
