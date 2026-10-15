@@ -363,6 +363,7 @@ struct CustomerMeasurementFlowView: View {
     @State private var rate = ""
     @State private var selectedRate: RateItem?
     @State private var measurements: [CustomerMeasurement] = []
+    @State private var editingMeasurement: CustomerMeasurement?
     @State private var showQuotation = false
     @State private var showMeterCalculator = false
 
@@ -463,14 +464,26 @@ struct CustomerMeasurementFlowView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(customerMeasurements) { item in
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text(item.title).font(.headline)
                                 Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.sqft, specifier: "%.2f") Sqft")
                                     .font(.caption)
+                                    .foregroundStyle(.secondary)
                                 Text("MUR \(formatAmount(item.amount))")
                                     .bold()
                                     .foregroundStyle(Color.sysyGold)
+                                HStack {
+                                    Button {
+                                        editingMeasurement = item
+                                    } label: {
+                                        Label("Edit মাপ", systemImage: "pencil")
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(.blue)
+                                    Spacer()
+                                }
                             }
+                            .padding(.vertical, 4)
                         }
                     }
                 }
@@ -499,6 +512,10 @@ struct CustomerMeasurementFlowView: View {
                         .environmentObject(store)
                     }
                 }
+            }
+            .sheet(item: $editingMeasurement) { item in
+                EditMeasurementView(measurement: item)
+                    .environmentObject(store)
             }
         }
     }
