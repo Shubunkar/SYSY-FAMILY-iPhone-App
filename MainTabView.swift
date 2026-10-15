@@ -419,7 +419,7 @@ struct CustomerMeasurementFlowView: View {
                     HStack {
                         Text("Total Area (m²)")
                         Spacer()
-                        Text("\(sqft, specifier: "%.2f")")
+                        Text("\(sqft, specifier: "%.2f") m²")
                             .bold()
                     }
 
@@ -466,7 +466,7 @@ struct CustomerMeasurementFlowView: View {
                         ForEach(customerMeasurements) { item in
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(item.title).font(.headline)
-                                Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.squareMeters, specifier: "%.2f") Sqft")
+                                Text("W \(item.width, specifier: "%.2f") m × H \(item.height, specifier: "%.2f") m × Qty \(item.quantity) = \(item.squareMeters, specifier: "%.2f") m²")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text("MUR \(formatAmount(item.amount))")
@@ -644,12 +644,6 @@ struct MeterCalculatorView: View {
                             .bold()
                     }
                     HStack {
-                        Text("Equivalent Sqft")
-                        Spacer()
-                        Text("\(squareFeet, specifier: "%.2f") Sqft")
-                            .bold()
-                    }
-                    HStack {
                         Text("Total Amount")
                         Spacer()
                         Text("MUR \(formatAmount(amount))")
@@ -823,7 +817,7 @@ struct MeasurementView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(item.customerName).font(.headline)
                                 Text(item.title)
-                                Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.squareMeters, specifier: "%.2f") Sqft")
+                                Text("W \(item.width, specifier: "%.2f") m × H \(item.height, specifier: "%.2f") m × Qty \(item.quantity) = \(item.squareMeters, specifier: "%.2f") m²")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text("MUR \(formatAmount(item.amount))")
@@ -1948,7 +1942,7 @@ struct QuoteDetailView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(item.title)
-                                    Text("\(item.squareMeters, specifier: "%.1f") Sqft × MUR \(formatAmount(item.rate))")
+                                    Text("\(item.squareMeters, specifier: "%.2f") m² × MUR \(formatAmount(item.rate))/m²")
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
