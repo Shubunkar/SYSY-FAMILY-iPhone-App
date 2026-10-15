@@ -688,6 +688,8 @@ struct MeasurementView: View {
     @State private var rate = ""
     @State private var selectedRate: RateItem?
     @State private var saveMessage = ""
+    @State private var editingMeasurement: CustomerMeasurement?
+    @State private var measurementToDelete: CustomerMeasurement?
 
     private var sqft: Double {
         guard let w = Double(width), let h = Double(height), let q = Int(quantity) else { return 0 }
@@ -797,11 +799,127 @@ struct MeasurementView: View {
                                     .bold()
                                     .foregroundStyle(Color.sysyGold)
                             }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button {
+                                    editingMeasurement = item
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(.blue)
+                                Button(role: .destructive) {
+                                    measurementToDelete = item
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                 }
             }
             .navigationTitle("Measurement")
+            .sheet(item: $editingMeasurement) { item in
+                EditMeasurementView(measurement: item)
+                    .environmentObject(store)
+            }
+            .alert("Measurement Delete", isPresented: Binding(
+                get: { measurementToDelete != nil },
+                set: { if !$0 { measurementToDelete = nil } }
+            )) {
+                Button("Cancel", role: .cancel) { measurementToDelete = nil }
+                Button("Delete", role: .destructive) {
+                    if let item = measurementToDelete {
+                        var updated = store.data
+                        updated.measurements.removeAll { $0.id == item.id }
+                        store.data = updated
+                    }
+                    measurementToDelete = nil
+                }
+            } message: {
+                Text("এই measurement মুছে ফেললে আর ফেরত পাওয়া যাবে না।")
+            }
+        }
+    }
+}
+
+struct EditMeasurementView: View {
+    @EnvironmentObject var store: AppDataStore
+    @Environment(\.dismiss) private var dismiss
+    let measurement: CustomerMeasurement
+    @State private var customerName: String
+    @State private var title: String
+    @State private var width: String
+    @State private var height: String
+    @State private var quantity: String
+    @State private var rate: String
+    @State private var errorMessage = ""
+
+    init(measurement: CustomerMeasurement) {
+        self.measurement = measurement
+        _customerName = State(initialValue: measurement.customerName)
+        _title = State(initialValue: measurement.title)
+        _width = State(initialValue: String(measurement.width))
+        _height = State(initialValue: String(measurement.height))
+        _quantity = State(initialValue: String(measurement.quantity))
+        _rate = State(initialValue: String(measurement.rate))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Measurement Edit") {
+                    TextField("Customer name", text: $customerName)
+                    TextField("Door / Window name", text: $title)
+                    TextField("Width (ft)", text: $width).keyboardType(.decimalPad)
+                    TextField("Height (ft)", text: $height).keyboardType(.decimalPad)
+                    TextField("Quantity", text: $quantity).keyboardType(.numberPad)
+                    TextField("Rate / Sqft (MUR)", text: $rate).keyboardType(.decimalPad)
+                }
+                if !errorMessage.isEmpty {
+                    Text(errorMessage).foregroundStyle(.red).font(.footnote)
+                }
+                Section {
+                    Button("Save Changes") { saveChanges() }
+                        .disabled(customerName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                  title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                  (Double(width) ?? 0) <= 0 || (Double(height) ?? 0) <= 0 ||
+                                  (Int(quantity) ?? 0) <= 0 || (Double(rate) ?? -1) < 0)
+                }
+            }
+            .navigationTitle("Measurement Edit")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Back") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func saveChanges() {
+        guard let savedWidth = Double(width), let savedHeight = Double(height),
+              let savedQuantity = Int(quantity), let savedRate = Double(rate),
+              savedWidth > 0, savedHeight > 0, savedQuantity > 0, savedRate >= 0 else {
+            errorMessage = "সঠিক Width, Height, Quantity ও Rate দিন।"
+            return
+        }
+        let name = customerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let itemTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !itemTitle.isEmpty else {
+            errorMessage = "Customer ও Measurement-এর নাম লিখুন।"
+            return
+        }
+        var updated = store.data
+        if let index = updated.measurements.firstIndex(where: { $0.id == measurement.id }) {
+            updated.measurements[index] = CustomerMeasurement(
+                id: measurement.id,
+                customerName: name,
+                title: itemTitle,
+                width: savedWidth,
+                height: savedHeight,
+                quantity: savedQuantity,
+                rate: savedRate
+            )
+            store.data = updated
+            dismiss()
         }
     }
 }
@@ -1946,7 +2064,7 @@ struct CustomerSummaryPDFShareSheet: UIViewControllerRepresentable {
 
             func drawHeader() {
                 // Small geometric SYSY brand mark, matching the app's navy/gold identity.
-                let mark = CGRect(x: margin, y: y + 1, width: 25, height: 25)
+                let mark = CGRect(x: page.width - margin - 25, y: y + 1, width: 25, height: 25)
                 UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
                 UIBezierPath(roundedRect: mark, cornerRadius: 4).stroke()
                 draw("SYSY FAMILY", size: 22, bold: true, color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1), gap: 2)
