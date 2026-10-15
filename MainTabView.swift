@@ -2960,75 +2960,188 @@ struct BackupDocument: FileDocument {
 
 struct PaymentsView: View {
     @EnvironmentObject var store: AppDataStore
+    @State private var searchText = ""
+
+    private struct LedgerRow: Identifiable {
+        let customer: Customer
+        let lastDate: Date?
+        let sales: Double
+        let advance: Double
+        let paidLater: Double
+        var paid: Double { advance + paidLater }
+        var due: Double { max(0, sales - paid) }
+        var id: UUID { customer.id }
+    }
+
+    private var ledgerRows: [LedgerRow] {
+        store.data.customers.map { customer in
+            let quotes = store.data.quotations.filter {
+                $0.customerName.caseInsensitiveCompare(customer.name) == .orderedSame
+            }
+            let payments = store.data.payments.filter {
+                $0.customerName.caseInsensitiveCompare(customer.name) == .orderedSame
+            }
+            return LedgerRow(
+                customer: customer,
+                lastDate: quotes.map(\.createdAt).max(),
+                sales: quotes.reduce(0) { $0 + $1.grandTotal },
+                advance: quotes.reduce(0) { $0 + $1.appliedAdvance },
+                paidLater: payments.reduce(0) { $0 + $1.amount }
+            )
+        }
+        .filter { row in
+            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            return query.isEmpty ||
+                row.customer.name.localizedCaseInsensitiveContains(query) ||
+                row.customer.phone.localizedCaseInsensitiveContains(query) ||
+                row.customer.address.localizedCaseInsensitiveContains(query)
+        }
+        .sorted { $0.customer.name.localizedCaseInsensitiveCompare($1.customer.name) == .orderedAscending }
+    }
+
+    private var filteredSales: Double { ledgerRows.reduce(0) { $0 + $1.sales } }
+    private var filteredAdvance: Double { ledgerRows.reduce(0) { $0 + $1.advance } }
+    private var filteredLaterPayments: Double { ledgerRows.reduce(0) { $0 + $1.paidLater } }
+    private var filteredDue: Double { ledgerRows.reduce(0) { $0 + $1.due } }
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("মোট পাওনা").font(.headline)
-                            Text("MUR \(formatAmount(store.totalDue))")
-                                .font(.title2.bold())
-                                .foregroundStyle(.red)
-                        }
-                        Spacer()
-                        Image(systemName: "banknote.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(Color.sysyGold)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        ledgerSummary(title: "মোট বিক্রি", amount: filteredSales, color: Color.sysyNavy, icon: "chart.bar.fill")
+                        ledgerSummary(title: "মোট অগ্রিম", amount: filteredAdvance, color: .green, icon: "arrow.down.left.circle.fill")
+                        ledgerSummary(title: "পরে জমা", amount: filteredLaterPayments, color: .green, icon: "banknote.fill")
+                        ledgerSummary(title: "মোট বাকি", amount: filteredDue, color: .red, icon: "exclamationmark.circle.fill")
                     }
-                }
-                Section("Collection Summary") {
+
+                    TextField("কাস্টমারের নাম / ফোন খুঁজুন", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .padding(.horizontal, 1)
+
                     HStack {
-                        Text("Quotation Advance")
+                        Text("কাস্টমার হিসাব").font(.headline)
                         Spacer()
-                        Text("MUR \(formatAmount(store.totalAdvanceCollected))")
-                            .foregroundStyle(.green)
-                    }
-                    HStack {
-                        Text("Payment Records")
-                        Spacer()
-                        Text("MUR \(formatAmount(store.data.payments.reduce(0) { $0 + $1.amount }))")
-                            .foregroundStyle(.green)
-                    }
-                    HStack {
-                        Text("এই মাসের Collection")
-                        Spacer()
-                        Text("MUR \(formatAmount(store.monthlyCollection))")
-                            .foregroundStyle(.green)
-                    }
-                    HStack {
-                        Text("Total Collected").bold()
-                        Spacer()
-                        Text("MUR \(formatAmount(store.totalCollected))")
-                            .bold()
-                            .foregroundStyle(Color.sysyGold)
-                    }
-                }
-                Section("সাম্প্রতিক Payment") {
-                    if store.data.payments.isEmpty {
-                        Text("কোনো payment record নেই")
+                        Text("\(ledgerRows.count) জন")
+                            .font(.caption)
                             .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(store.data.payments.sorted(by: { $0.date > $1.date })) { payment in
-                            PaymentRow(
-                                name: payment.customerName,
-                                amount: Int(payment.amount),
-                                date: payment.date.formatted(date: .abbreviated, time: .omitted)
-                            )
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    store.data.payments.removeAll { $0.id == payment.id }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
+                    }
+
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                ledgerCell("তারিখ", width: 92, header: true)
+                                ledgerCell("কাস্টমার", width: 130, header: true)
+                                ledgerCell("মোট বিক্রি", width: 112, header: true)
+                                ledgerCell("অগ্রিম", width: 100, header: true)
+                                ledgerCell("পরে জমা", width: 100, header: true)
+                                ledgerCell("বাকি", width: 112, header: true)
+                            }
+                            .background(Color.sysyNavy.opacity(0.10))
+
+                            if ledgerRows.isEmpty {
+                                Text(searchText.isEmpty ? "এখনও কোনো কাস্টমার নেই" : "কোনো কাস্টমার পাওয়া যায়নি")
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 646, minHeight: 90)
+                            } else {
+                                ForEach(Array(ledgerRows.enumerated()), id: \.element.id) { index, row in
+                                    NavigationLink(destination: CustomerAccountDetailsView(customer: row.customer)) {
+                                        HStack(spacing: 0) {
+                                            ledgerCell(row.lastDate?.formatted(date: .numeric, time: .omitted) ?? "—", width: 92)
+                                            ledgerCell(row.customer.name, width: 130, leading: true)
+                                            ledgerCell(formatAmount(row.sales), width: 112)
+                                            ledgerCell(formatAmount(row.advance), width: 100, color: .green)
+                                            ledgerCell(formatAmount(row.paidLater), width: 100, color: .green)
+                                            ledgerCell(formatAmount(row.due), width: 112, color: row.due > 0 ? .red : .green, bold: true)
+                                        }
+                                        .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    Divider()
                                 }
                             }
+
+                            HStack(spacing: 0) {
+                                ledgerCell("মোট", width: 222, header: true, leading: true)
+                                ledgerCell(formatAmount(filteredSales), width: 112, header: true)
+                                ledgerCell(formatAmount(filteredAdvance), width: 100, header: true)
+                                ledgerCell(formatAmount(filteredLaterPayments), width: 100, header: true)
+                                ledgerCell(formatAmount(filteredDue), width: 112, header: true, color: .red)
+                            }
+                            .background(Color.sysyGold.opacity(0.18))
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.separator).opacity(0.65), lineWidth: 1)
+                        }
+                    }
+
+                    Text("একটি সারিতে চাপ দিলে ওই কাস্টমারের বিস্তারিত হিসাব খুলবে। টেবিলের কলাম দেখতে পাশে সরান।")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Divider()
+
+                    Text("সাম্প্রতিক পেমেন্ট").font(.headline)
+                    if store.data.payments.isEmpty {
+                        ContentUnavailableView("কোনো পেমেন্ট নেই", systemImage: "banknote", description: Text("পেমেন্ট যোগ হলে এখানে দেখা যাবে।"))
+                    } else {
+                        ForEach(store.data.payments.sorted(by: { $0.date > $1.date }).prefix(20)) { payment in
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(payment.customerName).font(.subheadline.bold())
+                                    Text(payment.note.isEmpty ? "Payment" : payment.note)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(payment.date.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text("Rs \(formatAmount(payment.amount))")
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(.green)
+                            }
+                            .padding(.vertical, 5)
                         }
                     }
                 }
+                .padding()
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("হিসাব")
         }
+    }
+
+    private func ledgerSummary(title: String, amount: Double, color: Color, icon: String) -> some View {
+        AppCard {
+            VStack(alignment: .leading, spacing: 7) {
+                Image(systemName: icon).foregroundStyle(color)
+                Text(title).font(.caption).foregroundStyle(.secondary)
+                Text("Rs \(formatAmount(amount))")
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func ledgerCell(_ text: String, width: CGFloat, header: Bool = false, leading: Bool = false, color: Color = .primary, bold: Bool = false) -> some View {
+        Text(text)
+            .font(.system(size: header ? 12 : 12, weight: header || bold ? .semibold : .regular))
+            .foregroundStyle(header ? Color.sysyNavy : color)
+            .lineLimit(2)
+            .multilineTextAlignment(leading ? .leading : .trailing)
+            .frame(width: width, minHeight: 42, alignment: leading ? .leading : .trailing)
+            .padding(.horizontal, 7)
+            .overlay(alignment: .trailing) {
+                Rectangle().fill(Color(.separator).opacity(0.55)).frame(width: 0.5)
+            }
     }
 }
 
