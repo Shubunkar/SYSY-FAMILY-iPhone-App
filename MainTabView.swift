@@ -414,7 +414,8 @@ struct MeasurementSpreadsheetTable: View {
                 .background(Color.red)
                 .foregroundStyle(.white)
 
-                ForEach(Array(measurements.enumerated()), id: \.element.id) { index, item in
+                ForEach(measurements.indices, id: \.self) { index in
+                    let item = measurements[index]
                     MeasurementSpreadsheetRow(
                         measurement: item,
                         onSave: onUpdate,
@@ -491,15 +492,15 @@ private struct MeasurementSpreadsheetRow: View {
             field($quantity, width: 48, numeric: true, wholeNumber: true)
             Text(String(format: "%.2f", calculatedArea))
                 .font(.system(size: 11))
-                .frame(width: 82, minHeight: 42, alignment: .trailing)
+                .frame(width: 82).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
             Text(formatAmount(calculatedAmount))
                 .font(.system(size: 11))
-                .frame(width: 92, minHeight: 42, alignment: .trailing)
+                .frame(width: 92).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
             Text(formatAmount(calculatedAmount))
                 .font(.system(size: 11, weight: .semibold))
-                .frame(width: 104, minHeight: 42, alignment: .trailing)
+                .frame(width: 104).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
             HStack(spacing: 0) {
                 Button {
