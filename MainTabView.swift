@@ -489,18 +489,36 @@ struct CustomerMeasurementFlowView: View {
     @State private var editingMeasurement: CustomerMeasurement?
     @State private var showQuotation = false
     @State private var showMeterCalculator = false
+    @State private var workCompletionPercent = "80"
+    @State private var progressPaymentReceived = ""
 
-    private var sqft: Double {
+    private var area: Double {
         (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 1)
     }
 
     private var amount: Double {
-        sqft * (Double(rate) ?? 0)
+        area * (Double(rate) ?? 0)
     }
 
     private var customerMeasurements: [CustomerMeasurement] {
         guard let selectedCustomer else { return [] }
         return store.data.measurements.filter { $0.customerName == selectedCustomer.name }
+    }
+
+    private var totalMeasurementArea: Double {
+        customerMeasurements.reduce(0) { $0 + $1.squareMeters }
+    }
+
+    private var contractTotal: Double {
+        customerMeasurements.reduce(0) { $0 + $1.amount }
+    }
+
+    private var completedWorkBill: Double {
+        contractTotal * min(100, max(0, Double(workCompletionPercent) ?? 0)) / 100
+    }
+
+    private var progressBalance: Double {
+        max(0, completedWorkBill - max(0, Double(progressPaymentReceived) ?? 0))
     }
 
     var body: some View {
@@ -542,7 +560,7 @@ struct CustomerMeasurementFlowView: View {
                     HStack {
                         Text("Total Area (m²)")
                         Spacer()
-                        Text("\(sqft, specifier: "%.2f") m²")
+                        Text("\(area, specifier: "%.2f") m²")
                             .bold()
                     }
 
@@ -562,7 +580,7 @@ struct CustomerMeasurementFlowView: View {
 
                     Button("Measurement Save করুন") {
                         guard let customer = selectedCustomer,
-                              sqft > 0, amount > 0 else { return }
+                              area > 0, amount > 0 else { return }
 
                         let item = CustomerMeasurement(
                             customerName: customer.name,
@@ -578,7 +596,7 @@ struct CustomerMeasurementFlowView: View {
                         height = ""
                         quantity = "1"
                     }
-                    .disabled(selectedCustomer == nil || sqft <= 0 || amount <= 0)
+                    .disabled(selectedCustomer == nil || area <= 0 || amount <= 0)
                 }
 
                 Section("৩. এই Customer-এর Measurements — Excel Table") {
@@ -593,7 +611,57 @@ struct CustomerMeasurementFlowView: View {
                     }
                 }
 
-                Section("৪. Quotation") {
+                Section("৪. কাজের মোট হিসাব ও Completion Bill") {
+                    HStack {
+                        Text("সব কাজের মোট Area")
+                        Spacer()
+                        Text("\(totalMeasurementArea, specifier: "%.2f") m²")
+                            .fontWeight(.bold)
+                    }
+                    HStack {
+                        Text("মোট কাজের বিল")
+                        Spacer()
+                        Text("Rs \(formatAmount(contractTotal))")
+                            .fontWeight(.bold)
+                    }
+
+                    HStack {
+                        Text("কাজ সম্পন্ন (%)")
+                        Spacer()
+                        TextField("%", text: $workCompletionPercent)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    Text("০ থেকে ১০০ পর্যন্ত শতাংশ লিখুন।")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    HStack {
+                        Text("এই শতাংশ অনুযায়ী বিল")
+                        Spacer()
+                        Text("Rs \(formatAmount(completedWorkBill))")
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color.red)
+                    }
+
+                    TextField("এ পর্যন্ত পাওয়া টাকা (Rs)", text: $progressPaymentReceived)
+                        .keyboardType(.decimalPad)
+
+                    HStack {
+                        Text("কাজের অগ্রগতি অনুযায়ী আরও পাওনা")
+                        Spacer()
+                        Text("Rs \(formatAmount(progressBalance))")
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color.red)
+                    }
+                    Text("হিসাব: মোট Measurement বিল × সম্পন্ন শতাংশ। এটি Customer Account-এর মোট বকেয়া থেকে আলাদা অগ্রগতি-ভিত্তিক হিসাব।")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("৫. Quotation") {
                     Button {
                         showQuotation = true
                     } label: {
