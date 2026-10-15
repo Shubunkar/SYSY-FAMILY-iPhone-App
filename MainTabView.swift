@@ -3138,7 +3138,7 @@ struct PaymentsView: View {
             .foregroundStyle(header ? Color.sysyNavy : color)
             .lineLimit(2)
             .multilineTextAlignment(leading ? .leading : .trailing)
-            .frame(width: width, minHeight: 42, alignment: leading ? .leading : .trailing)
+            .frame(width: width).frame(minHeight: 42, alignment: leading ? .leading : .trailing)
             .padding(.horizontal, 7)
             .overlay(alignment: .trailing) {
                 Rectangle().fill(Color(.separator).opacity(0.55)).frame(width: 0.5)
