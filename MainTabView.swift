@@ -1889,9 +1889,123 @@ struct ProjectDetailsView: View {
     }
 }
 
+
+struct CustomerSummaryPDFShareSheet: UIViewControllerRepresentable {
+    let customer: Customer
+    let quotations: [BusinessQuotation]
+    let payments: [PaymentRecord]
+    let measurements: [CustomerMeasurement]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let data = makePDF()
+        let safeName = customer.name.replacingOccurrences(of: "/", with: "-")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("SYSY-FAMILY-\(safeName)-Summary.pdf")
+        try? data.write(to: url, options: .atomic)
+        return UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+
+    private func makePDF() -> Data {
+        let page = CGRect(x: 0, y: 0, width: 595, height: 842)
+        let margin: CGFloat = 40
+        let renderer = UIGraphicsPDFRenderer(bounds: page)
+        let sales = quotations.reduce(0) { $0 + $1.grandTotal }
+        let advances = quotations.reduce(0) { $0 + $1.appliedAdvance }
+        let extraPayments = payments.reduce(0) { $0 + $1.amount }
+        let paid = advances + extraPayments
+        let due = max(0, sales - paid)
+
+        return renderer.pdfData { context in
+            var y: CGFloat = margin
+            context.beginPage()
+
+            func draw(_ text: String, size: CGFloat = 11, bold: Bool = false, color: UIColor = .label, gap: CGFloat = 7) {
+                let font = bold ? UIFont.boldSystemFont(ofSize: size) : UIFont.systemFont(ofSize: size)
+                let paragraph = NSMutableParagraphStyle()
+                paragraph.lineBreakMode = .byWordWrapping
+                let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color, .paragraphStyle: paragraph]
+                let rect = (text as NSString).boundingRect(
+                    with: CGSize(width: page.width - margin * 2, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    attributes: attributes,
+                    context: nil
+                )
+                let height = ceil(rect.height)
+                if y + height > page.height - margin {
+                    context.beginPage()
+                    y = margin
+                    drawHeader()
+                }
+                (text as NSString).draw(
+                    in: CGRect(x: margin, y: y, width: page.width - margin * 2, height: height),
+                    withAttributes: attributes
+                )
+                y += height + gap
+            }
+
+            func drawHeader() {
+                // Small geometric SYSY brand mark, matching the app's navy/gold identity.
+                let mark = CGRect(x: margin, y: y + 1, width: 25, height: 25)
+                UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
+                UIBezierPath(roundedRect: mark, cornerRadius: 4).stroke()
+                draw("SYSY FAMILY", size: 22, bold: true, color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1), gap: 2)
+                draw("Aluminium Door & Window Solutions", size: 11, gap: 2)
+                draw("Mobile: +230 5890 9358", size: 10, color: .darkGray, gap: 10)
+                y += 2
+            }
+
+            drawHeader()
+            draw("CUSTOMER WORK & ACCOUNT SUMMARY", size: 16, bold: true, gap: 10)
+            draw("Customer: \(customer.name)", size: 12, bold: true, gap: 3)
+            draw("Phone: \(customer.phone)", gap: 3)
+            draw("Address: \(customer.address.isEmpty ? "—" : customer.address)", gap: 3)
+            draw("Work site: \(customer.projectAddress.isEmpty ? "—" : customer.projectAddress)", gap: 3)
+            if !customer.siteNote.isEmpty { draw("Site notes: \(customer.siteNote)", gap: 8) }
+
+            draw("ACCOUNT SUMMARY", size: 12, bold: true, color: UIColor.systemBlue, gap: 4)
+            draw("Total Sales: MUR \(formatAmount(sales))", gap: 3)
+            draw("Total Paid: MUR \(formatAmount(paid))", gap: 3)
+            draw("Balance Due: MUR \(formatAmount(due))", size: 12, bold: true, gap: 10)
+
+            draw("MEASUREMENTS", size: 12, bold: true, color: UIColor.systemBlue, gap: 4)
+            if measurements.isEmpty {
+                draw("No saved measurements.", color: .secondaryLabel)
+            } else {
+                for item in measurements {
+                    draw("\(item.title) — \(String(format: "%.2f", item.width)) × \(String(format: "%.2f", item.height)) × \(item.quantity) = \(String(format: "%.2f", item.sqft)) Sqft", gap: 2)
+                    draw("Amount: MUR \(formatAmount(item.amount))", size: 10, color: .secondaryLabel, gap: 6)
+                }
+            }
+
+            draw("QUOTATION HISTORY", size: 12, bold: true, color: UIColor.systemBlue, gap: 4)
+            if quotations.isEmpty {
+                draw("No quotations.", color: .secondaryLabel)
+            } else {
+                for quote in quotations.sorted(by: { $0.createdAt > $1.createdAt }) {
+                    draw("\(quote.number) • \(quote.createdAt.formatted(date: .abbreviated, time: .omitted))", bold: true, gap: 2)
+                    draw("Status: \(quote.status.rawValue) • Total: MUR \(formatAmount(quote.grandTotal)) • Advance: MUR \(formatAmount(quote.appliedAdvance)) • Due: MUR \(formatAmount(quote.balance))", size: 10, gap: 6)
+                }
+            }
+
+            draw("PAYMENT HISTORY", size: 12, bold: true, color: UIColor.systemBlue, gap: 4)
+            if payments.isEmpty {
+                draw("No separate payment records.", color: .secondaryLabel)
+            } else {
+                for payment in payments.sorted(by: { $0.date > $1.date }) {
+                    draw("\(payment.date.formatted(date: .abbreviated, time: .omitted)) • \(payment.note.isEmpty ? "Payment" : payment.note)", bold: true, gap: 2)
+                    draw("Received: MUR \(formatAmount(payment.amount))", size: 10, gap: 6)
+                }
+            }
+            draw("Generated by SYSY FAMILY • +230 5890 9358", size: 9, color: .secondaryLabel, gap: 0)
+        }
+    }
+}
+
 struct CustomerAccountDetailsView: View {
     @EnvironmentObject var store: AppDataStore
     let customer: Customer
+    @State private var showCustomerPDF = false
 
     private var customerQuotes: [BusinessQuotation] {
         store.data.quotations.filter {
@@ -1901,6 +2015,12 @@ struct CustomerAccountDetailsView: View {
 
     private var customerPayments: [PaymentRecord] {
         store.data.payments.filter {
+            $0.customerName.caseInsensitiveCompare(customer.name) == .orderedSame
+        }
+    }
+
+    private var customerMeasurements: [CustomerMeasurement] {
+        store.data.measurements.filter {
             $0.customerName.caseInsensitiveCompare(customer.name) == .orderedSame
         }
     }
@@ -2015,10 +2135,26 @@ struct CustomerAccountDetailsView: View {
         .navigationTitle("Customer Account")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showCustomerPDF = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel("Customer PDF share")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink(destination: EditCustomerView(customer: customer)) {
                     Image(systemName: "pencil")
                 }
             }
+        }
+        .sheet(isPresented: $showCustomerPDF) {
+            CustomerSummaryPDFShareSheet(
+                customer: customer,
+                quotations: customerQuotes,
+                payments: customerPayments,
+                measurements: customerMeasurements
+            )
         }
     }
 }
