@@ -394,9 +394,9 @@ struct CustomerMeasurementFlowView: View {
 
                 Section("২. Measurement") {
                     TextField("Door / Window নাম", text: $title)
-                    TextField("Width (ft)", text: $width)
+                    TextField("Width (m)", text: $width)
                         .keyboardType(.decimalPad)
-                    TextField("Height (ft)", text: $height)
+                    TextField("Height (m)", text: $height)
                         .keyboardType(.decimalPad)
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.numberPad)
@@ -413,11 +413,11 @@ struct CustomerMeasurementFlowView: View {
                         }
                     }
 
-                    TextField("Rate / Sqft", text: $rate)
+                    TextField("Rate / m² (Rs)", text: $rate)
                         .keyboardType(.decimalPad)
 
                     HStack {
-                        Text("Total Sqft")
+                        Text("Total Area (m²)")
                         Spacer()
                         Text("\(sqft, specifier: "%.2f")")
                             .bold()
@@ -466,7 +466,7 @@ struct CustomerMeasurementFlowView: View {
                         ForEach(customerMeasurements) { item in
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(item.title).font(.headline)
-                                Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.sqft, specifier: "%.2f") Sqft")
+                                Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.squareMeters, specifier: "%.2f") Sqft")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text("MUR \(formatAmount(item.amount))")
@@ -576,7 +576,7 @@ struct FlowQuotationView: View {
                     lines: measurements.map {
                         QuotationLine(
                             title: $0.title,
-                            description: "\(String(format: "%.1f", $0.width)) × \(String(format: "%.1f", $0.height)) × \($0.quantity) = \(String(format: "%.2f", $0.sqft)) Sqft",
+                            description: "W \(String(format: "%.2f", $0.width)) m × H \(String(format: "%.2f", $0.height)) m × Qty \($0.quantity) = \(String(format: "%.2f", $0.squareMeters)) m² • Rate Rs \(formatAmount($0.rate))/m²",
                             amount: $0.amount
                         )
                     },
@@ -615,10 +615,6 @@ struct MeterCalculatorView: View {
 
     private var squareMeter: Double {
         (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 1)
-    }
-
-    private var squareFeet: Double {
-        squareMeter * 10.7639104167
     }
 
     private var amount: Double {
@@ -674,18 +670,15 @@ struct MeterCalculatorView: View {
                             return
                         }
 
-                        // Save using the existing sqft-based model while preserving the entered M² total.
-                        let widthFeet = savedWidth * 3.280839895
-                        let heightFeet = savedHeight * 3.280839895
-                        let equivalentRatePerSqft = savedRate / 10.7639104167
                         store.addMeasurement(
                             CustomerMeasurement(
                                 customerName: customer.name,
-                                title: "\(title.trimmingCharacters(in: .whitespacesAndNewlines)) (Meter)",
-                                width: widthFeet,
-                                height: heightFeet,
+                                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                                width: savedWidth,
+                                height: savedHeight,
                                 quantity: savedQuantity,
-                                rate: equivalentRatePerSqft
+                                rate: savedRate,
+                                unit: "m"
                             )
                         )
                         dismiss()
@@ -745,9 +738,9 @@ struct MeasurementView: View {
                 Section("কাজের তথ্য") {
                     TextField("কাস্টমারের নাম", text: $customerName)
                     TextField("Door / Window নাম", text: $title)
-                    TextField("Width (ft)", text: $width)
+                    TextField("Width (m)", text: $width)
                         .keyboardType(.decimalPad)
-                    TextField("Height (ft)", text: $height)
+                    TextField("Height (m)", text: $height)
                         .keyboardType(.decimalPad)
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.numberPad)
@@ -764,15 +757,15 @@ struct MeasurementView: View {
                         }
                     }
 
-                    TextField("Rate / Sqft", text: $rate)
+                    TextField("Rate / m² (Rs)", text: $rate)
                         .keyboardType(.decimalPad)
                 }
 
                 Section("Automatic হিসাব") {
                     HStack {
-                        Text("Total Sqft")
+                        Text("Total Area (m²)")
                         Spacer()
-                        Text("\(sqft, specifier: "%.2f") Sqft")
+                        Text("\(sqft, specifier: "%.2f") m²")
                             .bold()
                             .foregroundStyle(Color.sysyGold)
                     }
@@ -830,7 +823,7 @@ struct MeasurementView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(item.customerName).font(.headline)
                                 Text(item.title)
-                                Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.sqft, specifier: "%.2f") Sqft")
+                                Text("\(item.width, specifier: "%.1f") × \(item.height, specifier: "%.1f") × \(item.quantity) = \(item.squareMeters, specifier: "%.2f") Sqft")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text("MUR \(formatAmount(item.amount))")
@@ -907,10 +900,10 @@ struct EditMeasurementView: View {
                 Section("Measurement Edit") {
                     TextField("Customer name", text: $customerName)
                     TextField("Door / Window name", text: $title)
-                    TextField("Width (ft)", text: $width).keyboardType(.decimalPad)
-                    TextField("Height (ft)", text: $height).keyboardType(.decimalPad)
+                    TextField("Width (m)", text: $width).keyboardType(.decimalPad)
+                    TextField("Height (m)", text: $height).keyboardType(.decimalPad)
                     TextField("Quantity", text: $quantity).keyboardType(.numberPad)
-                    TextField("Rate / Sqft (MUR)", text: $rate).keyboardType(.decimalPad)
+                    TextField("Rate / m² (Rs)", text: $rate).keyboardType(.decimalPad)
                 }
                 if !errorMessage.isEmpty {
                     Text(errorMessage).foregroundStyle(.red).font(.footnote)
@@ -1955,7 +1948,7 @@ struct QuoteDetailView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(item.title)
-                                    Text("\(item.sqft, specifier: "%.1f") Sqft × MUR \(formatAmount(item.rate))")
+                                    Text("\(item.squareMeters, specifier: "%.1f") Sqft × MUR \(formatAmount(item.rate))")
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -2137,8 +2130,9 @@ struct CustomerSummaryPDFShareSheet: UIViewControllerRepresentable {
                 draw("No saved measurements.", color: .secondaryLabel)
             } else {
                 for item in measurements {
-                    draw("\(item.title) — \(String(format: "%.2f", item.width)) × \(String(format: "%.2f", item.height)) × \(item.quantity) = \(String(format: "%.2f", item.sqft)) Sqft", gap: 2)
-                    draw("Amount: MUR \(formatAmount(item.amount))", size: 10, color: .secondaryLabel, gap: 6)
+                    draw("\(item.title) — W \(String(format: "%.2f", item.width)) m × H \(String(format: "%.2f", item.height)) m × Qty \(item.quantity)", gap: 2)
+                    draw("Area: \(String(format: "%.2f", item.squareMeters)) m² • Rate: Rs \(formatAmount(item.rate))/m²", size: 10, color: .secondaryLabel, gap: 2)
+                    draw("Amount: Rs \(formatAmount(item.amount))", size: 10, bold: true, gap: 6)
                 }
             }
 
@@ -2242,7 +2236,7 @@ struct CustomerAccountDetailsView: View {
                     ForEach(customerMeasurements) { item in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(item.title).font(.headline)
-                            Text("\(String(format: "%.2f", item.width)) × \(String(format: "%.2f", item.height)) × \(item.quantity) = \(String(format: "%.2f", item.sqft)) Sqft")
+                            Text("W \(String(format: "%.2f", item.width)) m × H \(String(format: "%.2f", item.height)) m × \(item.quantity) = \(String(format: "%.2f", item.squareMeters)) m²")
                                 .font(.caption).foregroundStyle(.secondary)
                             Text("MUR \(formatAmount(item.amount))").bold().foregroundStyle(Color.sysyGold)
                         }
@@ -3169,7 +3163,7 @@ struct RateListView: View {
     @EnvironmentObject var store: AppDataStore
     @State private var editing: RateItem?
     @State private var newName = ""
-    @State private var newUnit = "Sqft"
+    @State private var newUnit = "m²"
     @State private var newRate = ""
 
     var body: some View {
@@ -3194,7 +3188,7 @@ struct RateListView: View {
 
             Section("নতুন Rate যোগ করুন") {
                 TextField("যেমন: Sliding Window", text: $newName)
-                TextField("Unit: Sqft / Set", text: $newUnit)
+                TextField("Unit: m² / Set", text: $newUnit)
                 TextField("Rate", text: $newRate)
                     .keyboardType(.decimalPad)
 
