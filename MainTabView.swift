@@ -119,6 +119,27 @@ struct DashboardView: View {
                         }
                     }
 
+                    if !store.data.payments.isEmpty {
+                        AppCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Recent Activity • Payments").font(.headline)
+                                ForEach(store.data.payments.sorted(by: { $0.date > $1.date }).prefix(3)) { payment in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(payment.customerName).font(.subheadline.bold())
+                                            Text(payment.date.formatted(date: .abbreviated, time: .omitted))
+                                                .font(.caption2).foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                        Text("MUR \(formatAmount(payment.amount))")
+                                            .font(.subheadline.bold()).foregroundStyle(.green)
+                                    }
+                                    if payment.id != store.data.payments.sorted(by: { $0.date > $1.date }).prefix(3).last?.id { Divider() }
+                                }
+                            }
+                        }
+                    }
+
                     AppCard {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("দ্রুত কাজ").font(.headline)
@@ -2124,6 +2145,8 @@ struct CustomerAccountDetailsView: View {
     @EnvironmentObject var store: AppDataStore
     let customer: Customer
     @State private var showCustomerPDF = false
+    @State private var editingCustomerMeasurement: CustomerMeasurement?
+    @State private var customerMeasurementToDelete: CustomerMeasurement?
 
     private var customerQuotes: [BusinessQuotation] {
         store.data.quotations.filter {
@@ -2183,6 +2206,34 @@ struct CustomerAccountDetailsView: View {
             Section("Project") {
                 NavigationLink(destination: ProjectDetailsView(customer: customer)) {
                     Label("Project / Site Details", systemImage: "mappin.and.ellipse")
+                }
+            }
+
+            Section("Measurements") {
+                if customerMeasurements.isEmpty {
+                    Text("এই customer-এর measurement নেই। Work tab থেকে নতুন measurement যোগ করুন।")
+                        .font(.footnote).foregroundStyle(.secondary)
+                } else {
+                    ForEach(customerMeasurements) { item in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.title).font(.headline)
+                            Text("\(String(format: "%.2f", item.width)) × \(String(format: "%.2f", item.height)) × \(item.quantity) = \(String(format: "%.2f", item.sqft)) Sqft")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Text("MUR \(formatAmount(item.amount))").bold().foregroundStyle(Color.sysyGold)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button {
+                                editingCustomerMeasurement = item
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }.tint(.blue)
+                            Button(role: .destructive) {
+                                customerMeasurementToDelete = item
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
                 }
             }
 
@@ -2273,6 +2324,25 @@ struct CustomerAccountDetailsView: View {
                 payments: customerPayments,
                 measurements: customerMeasurements
             )
+        }
+        .sheet(item: $editingCustomerMeasurement) { item in
+            EditMeasurementView(measurement: item).environmentObject(store)
+        }
+        .alert("Measurement Delete", isPresented: Binding(
+            get: { customerMeasurementToDelete != nil },
+            set: { if !$0 { customerMeasurementToDelete = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { customerMeasurementToDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let item = customerMeasurementToDelete {
+                    var updated = store.data
+                    updated.measurements.removeAll { $0.id == item.id }
+                    store.data = updated
+                }
+                customerMeasurementToDelete = nil
+            }
+        } message: {
+            Text("এই measurement মুছে ফেললে আর ফেরত পাওয়া যাবে না।")
         }
     }
 }
@@ -2463,12 +2533,65 @@ struct HistoryMoneyRow: View {
     }
 }
 
+
+struct PaymentReceiptPDFShareSheet: UIViewControllerRepresentable {
+    let payment: PaymentRecord
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let data = makePDF()
+        let safeName = payment.customerName.replacingOccurrences(of: "/", with: "-")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("SYSY-FAMILY-Receipt-\(safeName).pdf")
+        try? data.write(to: url, options: .atomic)
+        return UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+
+    private func makePDF() -> Data {
+        let page = CGRect(x: 0, y: 0, width: 595, height: 842)
+        let margin: CGFloat = 42
+        let renderer = UIGraphicsPDFRenderer(bounds: page)
+        return renderer.pdfData { context in
+            context.beginPage()
+            // SYSY FAMILY brand mark.
+            let mark = CGRect(x: page.width - margin - 26, y: margin, width: 24, height: 24)
+            UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
+            UIBezierPath(roundedRect: mark, cornerRadius: 4).stroke()
+
+            func draw(_ text: String, size: CGFloat = 12, bold: Bool = false, color: UIColor = .label, y: CGFloat) {
+                let font = bold ? UIFont.boldSystemFont(ofSize: size) : UIFont.systemFont(ofSize: size)
+                let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+                (text as NSString).draw(at: CGPoint(x: margin, y: y), withAttributes: attributes)
+            }
+
+            draw("SYSY FAMILY", size: 24, bold: true, color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1), y: margin)
+            draw("Aluminium Door & Window Solutions", size: 12, y: margin + 34)
+            draw("Mobile: +230 5890 9358", size: 11, color: .darkGray, y: margin + 54)
+
+            let line = UIBezierPath()
+            line.move(to: CGPoint(x: margin, y: margin + 82))
+            line.addLine(to: CGPoint(x: page.width - margin, y: margin + 82))
+            UIColor.separator.setStroke()
+            line.stroke()
+
+            draw("PAYMENT RECEIPT", size: 20, bold: true, y: margin + 105)
+            draw("Receipt date: \(payment.date.formatted(date: .long, time: .shortened))", y: margin + 145)
+            draw("Received from: \(payment.customerName)", size: 14, bold: true, y: margin + 180)
+            draw("Amount received: MUR \(formatAmount(payment.amount))", size: 18, bold: true, color: UIColor.systemGreen, y: margin + 220)
+            draw("Payment note: \(payment.note.isEmpty ? "—" : payment.note)", y: margin + 260)
+            draw("Thank you for your payment.", size: 12, color: .darkGray, y: margin + 320)
+            draw("SYSY FAMILY • +230 5890 9358", size: 10, color: .secondaryLabel, y: page.height - margin - 20)
+        }
+    }
+}
+
 struct PaymentTrackingView: View {
     @State private var customerName = ""
     @State private var amount = ""
     @State private var note = ""
     @State private var showValidation = false
     @State private var validationMessage = ""
+    @State private var paymentForReceipt: PaymentRecord?
     @EnvironmentObject var store: AppDataStore
 
     private var totalPaid: Double {
@@ -2547,6 +2670,19 @@ struct PaymentTrackingView: View {
                         return
                     }
 
+                    let normalizedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let duplicateToday = store.data.payments.contains {
+                        $0.customerName.caseInsensitiveCompare(name) == .orderedSame &&
+                        abs($0.amount - value) < 0.005 &&
+                        $0.note == normalizedNote &&
+                        Calendar.current.isDate($0.date, inSameDayAs: Date())
+                    }
+                    if duplicateToday {
+                        validationMessage = "একই Customer-এর একই Amount ও Note-এর Payment আজ আগে থেকেই আছে। Save করার আগে যাচাই করুন।"
+                        showValidation = true
+                        return
+                    }
+
                     store.addPayment(
                         PaymentRecord(
                             customerName: name,
@@ -2591,6 +2727,13 @@ struct PaymentTrackingView: View {
                         Spacer()
                         Text("MUR \(formatAmount(payment.amount))")
                             .foregroundStyle(.green)
+                        Button {
+                            paymentForReceipt = payment
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("PDF receipt share")
                     }
                 }
                 .onDelete { offsets in
@@ -2604,6 +2747,9 @@ struct PaymentTrackingView: View {
             Button("ঠিক আছে", role: .cancel) { }
         } message: {
             Text(validationMessage)
+        }
+        .sheet(item: $paymentForReceipt) { payment in
+            PaymentReceiptPDFShareSheet(payment: payment)
         }
     }
 }
