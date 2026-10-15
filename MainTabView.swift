@@ -1166,6 +1166,14 @@ struct PDFShareSheet: UIViewControllerRepresentable {
 
             beginPage()
 
+            // Branded SYSY mark in the PDF header.
+            let logoLeft = CGRect(x: pageSize.width - margin - 42, y: y + 1, width: 18, height: 24)
+            let logoRight = CGRect(x: pageSize.width - margin - 21, y: y + 1, width: 18, height: 24)
+            UIColor(red: 0.82, green: 0.60, blue: 0.18, alpha: 1).setStroke()
+            UIBezierPath(roundedRect: logoLeft, cornerRadius: 3).stroke()
+            UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1).setStroke()
+            UIBezierPath(roundedRect: logoRight, cornerRadius: 3).stroke()
+
             drawText(
                 "SYSY FAMILY",
                 font: .boldSystemFont(ofSize: 26),
