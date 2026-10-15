@@ -24,6 +24,7 @@ struct SYSY_FAMILYApp: App {
                     showLaunchScreen = false
                 }
             }
+            .preferredColorScheme(.light)
         }
     }
 }
