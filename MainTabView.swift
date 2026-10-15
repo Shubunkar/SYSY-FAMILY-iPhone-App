@@ -353,6 +353,82 @@ struct AddCustomerView: View {
 
 
 
+struct MeasurementSpreadsheetTable: View {
+    let measurements: [CustomerMeasurement]
+    let onEdit: (CustomerMeasurement) -> Void
+    var onDelete: ((CustomerMeasurement) -> Void)? = nil
+
+    private let columns: [(String, CGFloat, Bool)] = [
+        ("কাজ", 142, true),
+        ("Width m", 78, false),
+        ("Height m", 78, false),
+        ("Qty", 48, false),
+        ("Area m²", 82, false),
+        ("Rate/m²", 92, false),
+        ("Total Rs", 104, false),
+        ("Edit", 64, false)
+    ]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: true) {
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
+                        cell(column.0, width: column.1, header: true, leading: column.2)
+                    }
+                }
+                .background(Color.sysyNavy.opacity(0.12))
+
+                ForEach(Array(measurements.enumerated()), id: \.element.id) { index, item in
+                    HStack(spacing: 0) {
+                        cell(item.title, width: 142, leading: true)
+                        cell(String(format: "%.2f", item.width), width: 78)
+                        cell(String(format: "%.2f", item.height), width: 78)
+                        cell(String(item.quantity), width: 48)
+                        cell(String(format: "%.2f", item.squareMeters), width: 82)
+                        cell(formatAmount(item.rate), width: 92)
+                        cell(formatAmount(item.amount), width: 104, bold: true)
+                        Button {
+                            onEdit(item)
+                        } label: {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 13, weight: .semibold))
+                                .frame(width: 64, height: 42)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
+                    Divider()
+                }
+
+                HStack(spacing: 0) {
+                    cell("মোট", width: 346, header: true, leading: true)
+                    cell(String(format: "%.2f", measurements.reduce(0) { $0 + $1.squareMeters }), width: 82, header: true)
+                    cell("—", width: 92, header: true)
+                    cell(formatAmount(measurements.reduce(0) { $0 + $1.amount }), width: 104, header: true)
+                    cell("", width: 64, header: true)
+                }
+                .background(Color.sysyGold.opacity(0.18))
+            }
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.separator).opacity(0.6), lineWidth: 1))
+        }
+    }
+
+    private func cell(_ value: String, width: CGFloat, header: Bool = false, leading: Bool = false, bold: Bool = false) -> some View {
+        Text(value)
+            .font(.system(size: 11, weight: header || bold ? .semibold : .regular))
+            .foregroundStyle(header ? Color.sysyNavy : Color.primary)
+            .lineLimit(2)
+            .multilineTextAlignment(leading ? .leading : .trailing)
+            .frame(width: width, minHeight: 42, alignment: leading ? .leading : .trailing)
+            .padding(.horizontal, 6)
+            .overlay(alignment: .trailing) {
+                Rectangle().fill(Color(.separator).opacity(0.45)).frame(width: 0.5)
+            }
+    }
+}
+
+
 struct CustomerMeasurementFlowView: View {
     @EnvironmentObject var store: AppDataStore
     @State private var selectedCustomer: Customer?
@@ -458,33 +534,15 @@ struct CustomerMeasurementFlowView: View {
                     .disabled(selectedCustomer == nil || sqft <= 0 || amount <= 0)
                 }
 
-                Section("৩. এই Customer-এর Measurements") {
+                Section("৩. এই Customer-এর Measurements — Excel Table") {
                     if customerMeasurements.isEmpty {
                         Text("এখনও কোনো measurement নেই")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(customerMeasurements) { item in
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(item.title).font(.headline)
-                                Text("W \(item.width, specifier: "%.2f") m × H \(item.height, specifier: "%.2f") m × Qty \(item.quantity) = \(item.squareMeters, specifier: "%.2f") m²")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text("MUR \(formatAmount(item.amount))")
-                                    .bold()
-                                    .foregroundStyle(Color.sysyGold)
-                                HStack {
-                                    Button {
-                                        editingMeasurement = item
-                                    } label: {
-                                        Label("Edit মাপ", systemImage: "pencil")
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .tint(.blue)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.vertical, 4)
-                        }
+                        MeasurementSpreadsheetTable(
+                            measurements: customerMeasurements,
+                            onEdit: { editingMeasurement = $0 }
+                        )
                     }
                 }
 
@@ -812,32 +870,12 @@ struct MeasurementView: View {
                 }
 
                 if !store.data.measurements.isEmpty {
-                    Section("সেভ করা হিসাব") {
-                        ForEach(store.data.measurements.reversed()) { item in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.customerName).font(.headline)
-                                Text(item.title)
-                                Text("W \(item.width, specifier: "%.2f") m × H \(item.height, specifier: "%.2f") m × Qty \(item.quantity) = \(item.squareMeters, specifier: "%.2f") m²")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text("MUR \(formatAmount(item.amount))")
-                                    .bold()
-                                    .foregroundStyle(Color.sysyGold)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button {
-                                    editingMeasurement = item
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                                .tint(.blue)
-                                Button(role: .destructive) {
-                                    measurementToDelete = item
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-                        }
+                    Section("সেভ করা হিসাব — Excel Table") {
+                        MeasurementSpreadsheetTable(
+                            measurements: Array(store.data.measurements.reversed()),
+                            onEdit: { editingMeasurement = $0 },
+                            onDelete: { measurementToDelete = $0 }
+                        )
                     }
                 }
             }
@@ -2222,31 +2260,16 @@ struct CustomerAccountDetailsView: View {
                 }
             }
 
-            Section("Measurements") {
+            Section("Measurements — Excel Table") {
                 if customerMeasurements.isEmpty {
-                    Text("এই customer-এর measurement নেই। Work tab থেকে নতুন measurement যোগ করুন।")
+                    Text("এই customer-এর measurement নেই। Work tab থেকে নতুন measurement যোগ করুন.")
                         .font(.footnote).foregroundStyle(.secondary)
                 } else {
-                    ForEach(customerMeasurements) { item in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(item.title).font(.headline)
-                            Text("W \(String(format: "%.2f", item.width)) m × H \(String(format: "%.2f", item.height)) m × \(item.quantity) = \(String(format: "%.2f", item.squareMeters)) m²")
-                                .font(.caption).foregroundStyle(.secondary)
-                            Text("MUR \(formatAmount(item.amount))").bold().foregroundStyle(Color.sysyGold)
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button {
-                                editingCustomerMeasurement = item
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }.tint(.blue)
-                            Button(role: .destructive) {
-                                customerMeasurementToDelete = item
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
+                    MeasurementSpreadsheetTable(
+                        measurements: customerMeasurements,
+                        onEdit: { editingCustomerMeasurement = $0 },
+                        onDelete: { customerMeasurementToDelete = $0 }
+                    )
                 }
             }
 
