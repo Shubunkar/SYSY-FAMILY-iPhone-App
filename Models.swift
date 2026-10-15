@@ -21,8 +21,9 @@ struct QuoteItem: Identifiable, Codable {
     var quantity: Int
     var rate: Double
 
-    var sqft: Double { (width * height) * Double(quantity) }
-    var amount: Double { sqft * rate }
+    var squareMeters: Double { (width * height) * Double(quantity) }
+    var sqft: Double { squareMeters * 10.7639104167 }
+    var amount: Double { squareMeters * rate }
 }
 
 struct Quote: Identifiable, Codable {
@@ -82,10 +83,10 @@ struct RateItem: Identifiable, Codable, Hashable {
 
 final class RateStore: ObservableObject {
     @Published var rates: [RateItem] = [
-        RateItem(name: "Aluminium Profile", unit: "Sqft", rate: 0),
-        RateItem(name: "Glass", unit: "Sqft", rate: 0),
+        RateItem(name: "Aluminium Profile", unit: "m²", rate: 0),
+        RateItem(name: "Glass", unit: "m²", rate: 0),
         RateItem(name: "Hardware", unit: "Set", rate: 0),
-        RateItem(name: "Labour", unit: "Sqft", rate: 0)
+        RateItem(name: "Labour", unit: "m²", rate: 0)
     ]
 }
 
