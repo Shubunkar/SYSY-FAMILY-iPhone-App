@@ -549,9 +549,12 @@ private struct MeasurementSpreadsheetRow: View {
     }
 
     private var calculatedAmount: Double {
-        measurement.unit == "ft"
-            ? (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 0) * (Double(rate) ?? 0)
-            : calculatedArea * (Double(rate) ?? 0)
+        let parsedWidth = Double(width) ?? 0
+        let parsedHeight = Double(height) ?? 0
+        let parsedQuantity = Double(Int(quantity) ?? 0)
+        let parsedRate = Double(rate) ?? 0
+        let measuredArea = parsedWidth * parsedHeight * parsedQuantity
+        return measuredArea * parsedRate
     }
 
     private func field(_ value: Binding<String>, width: CGFloat, numeric: Bool = false, wholeNumber: Bool = false, leading: Bool = false) -> some View {
@@ -562,7 +565,7 @@ private struct MeasurementSpreadsheetRow: View {
             .textFieldStyle(.roundedBorder)
             .frame(width: width - 8, height: 34)
             .padding(.horizontal, 4)
-            .frame(width: width, minHeight: 42)
+            .frame(width: width).frame(minHeight: 42)
     }
 }
 
