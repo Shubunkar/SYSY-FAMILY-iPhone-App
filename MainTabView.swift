@@ -133,6 +133,14 @@ struct DashboardView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("হোম")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: GlobalSearchView()) {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .accessibilityLabel("সব তথ্য খুঁজুন")
+                }
+            }
         }
     }
 }
@@ -1025,7 +1033,8 @@ struct PDFShareSheet: UIViewControllerRepresentable {
                 color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1),
                 spacingAfter: 3
             )
-            drawText("Aluminium Door & Window Solutions", font: .systemFont(ofSize: 12), spacingAfter: 12)
+            drawText("Aluminium Door & Window Solutions", font: .systemFont(ofSize: 12), spacingAfter: 3)
+            drawText("Mobile: +230 5890 9358", font: .systemFont(ofSize: 11), color: UIColor.darkGray, spacingAfter: 12)
             drawRule()
 
             drawText("QUOTATION", font: .boldSystemFont(ofSize: 20), spacingAfter: 5)
@@ -2700,6 +2709,136 @@ struct EditRateView: View {
     }
 }
 
+
+struct GlobalSearchView: View {
+    @EnvironmentObject var store: AppDataStore
+    @State private var query = ""
+
+    private var searchText: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var matchingCustomers: [Customer] {
+        guard !searchText.isEmpty else { return [] }
+        return store.data.customers.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.phone.localizedCaseInsensitiveContains(searchText) ||
+            $0.address.localizedCaseInsensitiveContains(searchText) ||
+            $0.projectAddress.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    private var matchingQuotations: [BusinessQuotation] {
+        guard !searchText.isEmpty else { return [] }
+        return store.data.quotations.filter {
+            $0.number.localizedCaseInsensitiveContains(searchText) ||
+            $0.customerName.localizedCaseInsensitiveContains(searchText) ||
+            $0.phone.localizedCaseInsensitiveContains(searchText) ||
+            $0.projectAddress.localizedCaseInsensitiveContains(searchText)
+        }.sorted { $0.createdAt > $1.createdAt }
+    }
+    private var matchingSites: [String] {
+        guard !searchText.isEmpty else { return [] }
+        let all = store.data.customers.map(\.projectAddress) + store.data.quotations.map(\.projectAddress)
+        return Array(Set(all.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && $0.localizedCaseInsensitiveContains(searchText) })).sorted()
+    }
+    private var matchingMeasurements: [CustomerMeasurement] {
+        guard !searchText.isEmpty else { return [] }
+        return store.data.measurements.filter {
+            $0.customerName.localizedCaseInsensitiveContains(searchText) ||
+            $0.title.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    var body: some View {
+        List {
+            if searchText.isEmpty {
+                ContentUnavailableView("কী খুঁজবেন লিখুন", systemImage: "magnifyingglass",
+                    description: Text("Customer, phone, site name, quotation number বা measurement লিখুন।"))
+            } else {
+                Section("Customers (\(matchingCustomers.count))") {
+                    if matchingCustomers.isEmpty { Text("কোনো customer পাওয়া যায়নি").foregroundStyle(.secondary) }
+                    ForEach(matchingCustomers) { customer in
+                        NavigationLink(destination: CustomerAccountDetailsView(customer: customer)) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(customer.name).font(.headline)
+                                Text("\(customer.phone) • \(customer.address)")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                Section("Sites (\(matchingSites.count))") {
+                    if matchingSites.isEmpty { Text("কোনো site পাওয়া যায়নি").foregroundStyle(.secondary) }
+                    ForEach(matchingSites, id: \.self) { site in
+                        Label(site, systemImage: "mappin.and.ellipse")
+                    }
+                }
+                Section("Quotations (\(matchingQuotations.count))") {
+                    if matchingQuotations.isEmpty { Text("কোনো quotation পাওয়া যায়নি").foregroundStyle(.secondary) }
+                    ForEach(matchingQuotations) { quotation in
+                        NavigationLink(destination: QuotationPreviewView(quotation: quotation)) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(quotation.number).font(.headline)
+                                Text(quotation.customerName).font(.subheadline)
+                                Text("MUR \(formatAmount(quotation.grandTotal)) • \(quotation.status.banglaTitle)")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                Section("Measurements (\(matchingMeasurements.count))") {
+                    if matchingMeasurements.isEmpty { Text("কোনো measurement পাওয়া যায়নি").foregroundStyle(.secondary) }
+                    ForEach(matchingMeasurements) { item in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(item.title).font(.headline)
+                            Text(item.customerName).font(.caption)
+                            Text("\(String(format: "%.2f", item.width)) × \(String(format: "%.2f", item.height)) × \(item.quantity) = MUR \(formatAmount(item.amount))")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        .searchable(text: $query, prompt: "নাম / ফোন / Site / Quotation খুঁজুন")
+        .navigationTitle("সব তথ্য Search")
+    }
+}
+
+struct SiteListView: View {
+    @EnvironmentObject var store: AppDataStore
+    @State private var query = ""
+
+    private var sites: [String] {
+        let all = store.data.customers.map(\.projectAddress) + store.data.quotations.map(\.projectAddress)
+        return Array(Set(all.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && (query.isEmpty || $0.localizedCaseInsensitiveContains(query)) })).sorted()
+    }
+
+    var body: some View {
+        List {
+            if sites.isEmpty {
+                ContentUnavailableView("কোনো Site নেই", systemImage: "mappin.and.ellipse",
+                    description: Text("Customer Edit বা Quotation-এ Project / Site Address যোগ করলে এখানে দেখা যাবে।"))
+            } else {
+                ForEach(sites, id: \.self) { site in
+                    let customers = store.data.customers.filter { $0.projectAddress.caseInsensitiveCompare(site) == .orderedSame }
+                    let quotations = store.data.quotations.filter { $0.projectAddress.caseInsensitiveCompare(site) == .orderedSame }
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(site).font(.headline)
+                        Text("Customers: \(customers.count) • Quotations: \(quotations.count)")
+                            .font(.caption).foregroundStyle(.secondary)
+                        if !customers.isEmpty {
+                            Text(customers.map(\.name).joined(separator: ", "))
+                                .font(.caption)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .searchable(text: $query, prompt: "Site name খুঁজুন")
+        .navigationTitle("সব কাজের Site")
+    }
+}
+
 struct SettingsView: View {
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
 
@@ -2717,6 +2856,12 @@ struct SettingsView: View {
                     .padding(.vertical, 6)
                 }
                 Section("Business") {
+                    NavigationLink(destination: GlobalSearchView()) {
+                        Label("সব তথ্য Search করুন", systemImage: "magnifyingglass")
+                    }
+                    NavigationLink(destination: SiteListView()) {
+                        Label("সব কাজের Site এক জায়গায়", systemImage: "mappin.and.ellipse")
+                    }
                     NavigationLink(destination: RateListView()) {
                         Label("Rate List — নিজে Edit করুন", systemImage: "list.number")
                     }
