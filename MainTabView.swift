@@ -561,15 +561,8 @@ struct FullScreenMeasurementSpreadsheetView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
 
-                if measurements.isEmpty {
-                    ContentUnavailableView(
-                        "কোনো Measurement নেই",
-                        systemImage: "tablecells",
-                        description: Text("Customer নির্বাচন করে আগে Measurement যোগ করুন।")
-                    )
-                    Spacer()
-                } else {
-                    ScrollView(.vertical) {
+                GeometryReader { geometry in
+                    ScrollView(.vertical, showsIndicators: true) {
                         VStack(spacing: 6) {
                             Text("Pencil চাপুন → একই টেবিলে ঘরগুলো বদলান → ✓ চাপুন Save করতে")
                                 .font(.caption)
@@ -587,11 +580,13 @@ struct FullScreenMeasurementSpreadsheetView: View {
                                     pendingDelete = item
                                     showDeleteConfirmation = true
                                 },
-                                activeEditID: activeEditID
+                                activeEditID: activeEditID,
+                                blankRowCount: max(0, Int((geometry.size.height - 100) / 49) - measurements.count - 2)
                             )
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 6)
                         }
+                        .frame(minHeight: geometry.size.height, alignment: .top)
                     }
                 }
 
