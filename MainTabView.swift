@@ -424,6 +424,7 @@ struct MeasurementSpreadsheetTable: View {
     let onUpdate: (CustomerMeasurement) -> Void
     var onDelete: ((CustomerMeasurement) -> Void)? = nil
     var activeEditID: UUID? = nil
+    var blankRowCount: Int = 0
 
     private let columns: [(String, CGFloat, Bool)] = [
         ("REF", 142, true),
@@ -457,6 +458,22 @@ struct MeasurementSpreadsheetTable: View {
                         onDelete: onDelete,
                         isEditing: activeEditID == item.id
                     )
+                    .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
+                    Divider()
+                }
+
+                ForEach(0..<max(0, blankRowCount), id: \.self) { index in
+                    HStack(spacing: 0) {
+                        cell("", width: 142, leading: true)
+                        cell("", width: 84)
+                        cell("", width: 84)
+                        cell("", width: 48)
+                        cell("", width: 86)
+                        cell("", width: 92)
+                        cell("", width: 104)
+                        cell("", width: 90)
+                    }
+                    .frame(minHeight: 48)
                     .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
                     Divider()
                 }
