@@ -423,6 +423,7 @@ struct MeasurementSpreadsheetTable: View {
     let onEdit: (CustomerMeasurement) -> Void
     let onUpdate: (CustomerMeasurement) -> Void
     var onDelete: ((CustomerMeasurement) -> Void)? = nil
+    var activeEditID: UUID? = nil
 
     private let columns: [(String, CGFloat, Bool)] = [
         ("REF", 142, true),
@@ -453,7 +454,8 @@ struct MeasurementSpreadsheetTable: View {
                         measurement: item,
                         onSave: onUpdate,
                         onEdit: onEdit,
-                        onDelete: onDelete
+                        onDelete: onDelete,
+                        isEditing: activeEditID == item.id
                     )
                     .background(index.isMultiple(of: 2) ? Color(.secondarySystemGroupedBackground) : Color(.systemBackground))
                     Divider()
@@ -493,7 +495,7 @@ struct FullScreenMeasurementSpreadsheetView: View {
     let measurements: [CustomerMeasurement]
     let onUpdate: (CustomerMeasurement) -> Void
     let onDelete: (CustomerMeasurement) -> Void
-    @State private var editingMeasurement: CustomerMeasurement?
+    @State private var activeEditID: UUID?
     @State private var pendingDelete: CustomerMeasurement?
     @State private var showDeleteConfirmation = false
 
@@ -551,17 +553,28 @@ struct FullScreenMeasurementSpreadsheetView: View {
                     Spacer()
                 } else {
                     ScrollView(.vertical) {
-                        MeasurementSpreadsheetTable(
-                            measurements: measurements,
-                            onEdit: { editingMeasurement = $0 },
-                            onUpdate: onUpdate,
-                            onDelete: { item in
-                                pendingDelete = item
-                                showDeleteConfirmation = true
-                            }
-                        )
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 6)
+                        VStack(spacing: 6) {
+                            Text("Pencil চাপুন → একই টেবিলে ঘরগুলো বদলান → ✓ চাপুন Save করতে")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 8)
+                            MeasurementSpreadsheetTable(
+                                measurements: measurements,
+                                onEdit: { activeEditID = $0.id },
+                                onUpdate: { item in
+                                    onUpdate(item)
+                                    activeEditID = nil
+                                },
+                                onDelete: { item in
+                                    pendingDelete = item
+                                    showDeleteConfirmation = true
+                                },
+                                activeEditID: activeEditID
+                            )
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 6)
+                        }
                     }
                 }
 
@@ -588,10 +601,6 @@ struct FullScreenMeasurementSpreadsheetView: View {
             }
             .background(Color(.systemBackground))
             .toolbar(.hidden, for: .navigationBar)
-            .fullScreenCover(item: $editingMeasurement) { item in
-                EditMeasurementView(measurement: item)
-                    .environmentObject(store)
-            }
             .confirmationDialog(
                 "এই Measurement মুছে ফেলবেন?",
                 isPresented: $showDeleteConfirmation,
@@ -615,17 +624,19 @@ private struct MeasurementSpreadsheetRow: View {
     let onSave: (CustomerMeasurement) -> Void
     let onEdit: (CustomerMeasurement) -> Void
     let onDelete: ((CustomerMeasurement) -> Void)?
+    var isEditing: Bool = false
     @State private var title: String
     @State private var width: String
     @State private var height: String
     @State private var quantity: String
     @State private var rate: String
 
-    init(measurement: CustomerMeasurement, onSave: @escaping (CustomerMeasurement) -> Void, onEdit: @escaping (CustomerMeasurement) -> Void, onDelete: ((CustomerMeasurement) -> Void)?) {
+    init(measurement: CustomerMeasurement, onSave: @escaping (CustomerMeasurement) -> Void, onEdit: @escaping (CustomerMeasurement) -> Void, onDelete: ((CustomerMeasurement) -> Void)?, isEditing: Bool = false) {
         self.measurement = measurement
         self.onSave = onSave
         self.onEdit = onEdit
         self.onDelete = onDelete
+        self.isEditing = isEditing
         _title = State(initialValue: measurement.title)
         _width = State(initialValue: String(format: "%.0f", measurement.width * 1000))
         _height = State(initialValue: String(format: "%.0f", measurement.height * 1000))
@@ -699,6 +710,14 @@ private struct MeasurementSpreadsheetRow: View {
             }
             .frame(width: 90)
         }
+        .overlay {
+            if isEditing {
+                RoundedRectangle(cornerRadius: 2)
+                    .stroke(Color.sysyGold, lineWidth: 2)
+                    .allowsHitTesting(false)
+            }
+        }
+        .background(isEditing ? Color.sysyGold.opacity(0.10) : Color.clear)
     }
 
     private var calculatedArea: Double {
