@@ -578,7 +578,13 @@ private struct MeasurementSpreadsheetRow: View {
     }
 
     private var calculatedArea: Double {
-        ((Double(width) ?? 0) / 1000) * ((Double(height) ?? 0) / 1000) * Double(Int(quantity) ?? 0)
+        let widthMillimetres = Double(width) ?? 0
+        let heightMillimetres = Double(height) ?? 0
+        let quantityValue = Double(Int(quantity) ?? 0)
+        let widthMetres = widthMillimetres / 1000.0
+        let heightMetres = heightMillimetres / 1000.0
+        let singleArea = widthMetres * heightMetres
+        return singleArea * quantityValue
     }
 
     private var calculatedAmount: Double {
