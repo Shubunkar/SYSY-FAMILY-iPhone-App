@@ -486,6 +486,130 @@ struct MeasurementSpreadsheetTable: View {
     }
 }
 
+struct FullScreenMeasurementSpreadsheetView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var store: AppDataStore
+    let customerName: String
+    let measurements: [CustomerMeasurement]
+    let onUpdate: (CustomerMeasurement) -> Void
+    let onDelete: (CustomerMeasurement) -> Void
+    @State private var editingMeasurement: CustomerMeasurement?
+    @State private var pendingDelete: CustomerMeasurement?
+    @State private var showDeleteConfirmation = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    ProfileAvatar(size: 54)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("SYSY FAMILY")
+                            .font(.headline.bold())
+                            .foregroundStyle(Color.sysyNavy)
+                        Text("+230 5890 9358")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text(customerName)
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 4)
+                    VStack(alignment: .trailing, spacing: 3) {
+                        Text("MEASUREMENT")
+                            .font(.caption2.bold())
+                        Text("\(measurements.count) rows")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.systemBackground))
+
+                HStack {
+                    Text("Width / Height in mm • Area in m²")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Label("Back", systemImage: "chevron.left")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.sysyNavy)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+
+                if measurements.isEmpty {
+                    ContentUnavailableView(
+                        "কোনো Measurement নেই",
+                        systemImage: "tablecells",
+                        description: Text("Customer নির্বাচন করে আগে Measurement যোগ করুন।")
+                    )
+                    Spacer()
+                } else {
+                    ScrollView(.vertical) {
+                        MeasurementSpreadsheetTable(
+                            measurements: measurements,
+                            onEdit: { editingMeasurement = $0 },
+                            onUpdate: onUpdate,
+                            onDelete: { item in
+                                pendingDelete = item
+                                showDeleteConfirmation = true
+                            }
+                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 6)
+                    }
+                }
+
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("TOTAL AREA")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text(String(format: "%.3f m²", measurements.reduce(0) { $0 + $1.squareMeters }))
+                            .font(.headline.bold())
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 3) {
+                        Text("TOTAL AMOUNT")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text("Rs \(formatAmount(measurements.reduce(0) { $0 + $1.amount }))")
+                            .font(.headline.bold())
+                            .foregroundStyle(Color.sysyGold)
+                    }
+                }
+                .padding(12)
+                .background(Color(.secondarySystemBackground))
+            }
+            .background(Color(.systemBackground))
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(item: $editingMeasurement) { item in
+                EditMeasurementView(measurement: item)
+                    .environmentObject(store)
+            }
+            .confirmationDialog(
+                "এই Measurement মুছে ফেলবেন?",
+                isPresented: $showDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    if let pendingDelete { onDelete(pendingDelete) }
+                    pendingDelete = nil
+                }
+                Button("বাতিল", role: .cancel) { pendingDelete = nil }
+            } message: {
+                Text("মুছে ফেললে এই Measurement আর ফেরত পাওয়া যাবে না।")
+            }
+        }
+    }
+}
+
+
 private struct MeasurementSpreadsheetRow: View {
     let measurement: CustomerMeasurement
     let onSave: (CustomerMeasurement) -> Void
@@ -624,6 +748,7 @@ struct CustomerMeasurementFlowView: View {
     @State private var showMeterCalculator = false
     @State private var workCompletionPercent = "80"
     @State private var progressPaymentReceived = ""
+    @State private var showFullScreenSpreadsheet = false
 
     private var area: Double {
         (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 1)
@@ -733,6 +858,14 @@ struct CustomerMeasurementFlowView: View {
                 }
 
                 Section("৩. এই Customer-এর Measurements — Excel Table") {
+                    Button {
+                        showFullScreenSpreadsheet = true
+                    } label: {
+                        Label("Full Screen Excel Table খুলুন", systemImage: "arrow.up.left.and.arrow.down.right")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .disabled(selectedCustomer == nil)
                     if customerMeasurements.isEmpty {
                         Text("এখনও কোনো measurement নেই")
                             .foregroundStyle(.secondary)
@@ -746,6 +879,9 @@ struct CustomerMeasurementFlowView: View {
                                     updated.measurements[index] = saved
                                     store.data = updated
                                 }
+                            },
+                            onDelete: { item in
+                                store.data.measurements.removeAll { $0.id == item.id }
                             }
                         )
                     }
@@ -811,6 +947,23 @@ struct CustomerMeasurementFlowView: View {
                 }
             }
             .navigationTitle("Customer → Measurement")
+            .fullScreenCover(isPresented: $showFullScreenSpreadsheet) {
+                FullScreenMeasurementSpreadsheetView(
+                    customerName: selectedCustomer?.name ?? "",
+                    measurements: customerMeasurements,
+                    onUpdate: { saved in
+                        var data = store.data
+                        if let index = data.measurements.firstIndex(where: { $0.id == saved.id }) {
+                            data.measurements[index] = saved
+                            store.data = data
+                        }
+                    },
+                    onDelete: { item in
+                        store.data.measurements.removeAll { $0.id == item.id }
+                    }
+                )
+                .environmentObject(store)
+            }
             .sheet(isPresented: $showMeterCalculator) {
                 MeterCalculatorView(customer: selectedCustomer)
                     .environmentObject(store)
