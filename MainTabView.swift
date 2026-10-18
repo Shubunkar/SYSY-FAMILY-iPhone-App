@@ -588,7 +588,7 @@ struct FullScreenMeasurementSpreadsheetView: View {
             }
             .background(Color(.systemBackground))
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(item: $editingMeasurement) { item in
+            .fullScreenCover(item: $editingMeasurement) { item in
                 EditMeasurementView(measurement: item)
                     .environmentObject(store)
             }
@@ -872,7 +872,7 @@ struct CustomerMeasurementFlowView: View {
                     } else {
                         MeasurementSpreadsheetTable(
                             measurements: customerMeasurements,
-                            onEdit: { editingMeasurement = $0 },
+                            onEdit: { _ in showFullScreenSpreadsheet = true },
                             onUpdate: { saved in
                                 var updated = store.data
                                 if let index = updated.measurements.firstIndex(where: { $0.id == saved.id }) {
