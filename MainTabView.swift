@@ -425,14 +425,14 @@ struct MeasurementSpreadsheetTable: View {
     var onDelete: ((CustomerMeasurement) -> Void)? = nil
 
     private let columns: [(String, CGFloat, Bool)] = [
-        ("কাজ", 142, true),
-        ("Width m", 78, false),
-        ("Height m", 78, false),
-        ("Qty", 48, false),
-        ("Area m²", 82, false),
-        ("Rate/m²", 92, false),
-        ("Total Rs", 104, false),
-        ("Save / Edit", 90, false)
+        ("REF", 142, true),
+        ("WIDTH mm", 84, false),
+        ("HEIGHT mm", 84, false),
+        ("QTY", 48, false),
+        ("TOTAL (M²)", 86, false),
+        ("RATE (Rs/m²)", 92, false),
+        ("TOTAL (Rs)", 104, false),
+        ("SAVE / EDIT", 90, false)
     ]
 
     var body: some View {
@@ -444,7 +444,7 @@ struct MeasurementSpreadsheetTable: View {
                         cell(column.0, width: column.1, header: true, leading: column.2)
                     }
                 }
-                .background(Color.red)
+                .background(Color.sysyNavy)
                 .foregroundStyle(.white)
 
                 ForEach(measurements.indices, id: \.self) { index in
@@ -460,8 +460,8 @@ struct MeasurementSpreadsheetTable: View {
                 }
 
                 HStack(spacing: 0) {
-                    cell("মোট", width: 346, header: true, leading: true)
-                    cell(String(format: "%.2f", measurements.reduce(0) { $0 + $1.squareMeters }), width: 82, header: true)
+                    cell("মোট", width: 358, header: true, leading: true)
+                    cell(String(format: "%.3f", measurements.reduce(0) { $0 + $1.squareMeters }), width: 86, header: true)
                     cell("—", width: 92, header: true)
                     cell(formatAmount(measurements.reduce(0) { $0 + $1.amount }), width: 104, header: true)
                     cell("", width: 90, header: true)
@@ -503,8 +503,8 @@ private struct MeasurementSpreadsheetRow: View {
         self.onEdit = onEdit
         self.onDelete = onDelete
         _title = State(initialValue: measurement.title)
-        _width = State(initialValue: String(format: "%.2f", measurement.width))
-        _height = State(initialValue: String(format: "%.2f", measurement.height))
+        _width = State(initialValue: String(format: "%.0f", measurement.width * 1000))
+        _height = State(initialValue: String(format: "%.0f", measurement.height * 1000))
         _quantity = State(initialValue: String(measurement.quantity))
         _rate = State(initialValue: String(format: "%.2f", measurement.rate))
     }
@@ -520,14 +520,14 @@ private struct MeasurementSpreadsheetRow: View {
     var body: some View {
         HStack(spacing: 0) {
             field($title, width: 142, leading: true)
-            field($width, width: 78, numeric: true)
-            field($height, width: 78, numeric: true)
+            field($width, width: 84, numeric: true, wholeNumber: true)
+            field($height, width: 84, numeric: true, wholeNumber: true)
             field($quantity, width: 48, numeric: true, wholeNumber: true)
-            Text(String(format: "%.2f", calculatedArea))
+            Text(String(format: "%.3f", calculatedArea))
                 .font(.system(size: 11))
-                .frame(width: 82).frame(minHeight: 42, alignment: .trailing)
+                .frame(width: 86).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
-            Text(formatAmount(calculatedAmount))
+            Text(formatAmount(Double(rate) ?? 0))
                 .font(.system(size: 11))
                 .frame(width: 92).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
@@ -542,8 +542,8 @@ private struct MeasurementSpreadsheetRow: View {
                         id: measurement.id,
                         customerName: measurement.customerName,
                         title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-                        width: Double(width) ?? measurement.width,
-                        height: Double(height) ?? measurement.height,
+                        width: (Double(width) ?? (measurement.width * 1000)) / 1000,
+                        height: (Double(height) ?? (measurement.height * 1000)) / 1000,
                         quantity: Int(quantity) ?? measurement.quantity,
                         rate: Double(rate) ?? measurement.rate,
                         unit: measurement.unit
@@ -578,7 +578,7 @@ private struct MeasurementSpreadsheetRow: View {
     }
 
     private var calculatedArea: Double {
-        (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 0)
+        ((Double(width) ?? 0) / 1000) * ((Double(height) ?? 0) / 1000) * Double(Int(quantity) ?? 0)
     }
 
     private var calculatedAmount: Double {
@@ -586,7 +586,7 @@ private struct MeasurementSpreadsheetRow: View {
         let parsedHeight = Double(height) ?? 0
         let parsedQuantity = Double(Int(quantity) ?? 0)
         let parsedRate = Double(rate) ?? 0
-        let measuredArea = parsedWidth * parsedHeight * parsedQuantity
+        let measuredArea = (parsedWidth / 1000) * (parsedHeight / 1000) * parsedQuantity
         return measuredArea * parsedRate
     }
 
@@ -662,10 +662,10 @@ struct CustomerMeasurementFlowView: View {
 
                 Section("২. Measurement") {
                     TextField("Door / Window নাম", text: $title)
-                    TextField("Width (m)", text: $width)
-                        .keyboardType(.decimalPad)
-                    TextField("Height (m)", text: $height)
-                        .keyboardType(.decimalPad)
+                    TextField("WIDTH (mm)", text: $width)
+                        .keyboardType(.numberPad)
+                    TextField("HEIGHT (mm)", text: $height)
+                        .keyboardType(.numberPad)
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.numberPad)
                     Picker("Saved Rate", selection: $selectedRate) {
@@ -712,8 +712,8 @@ struct CustomerMeasurementFlowView: View {
                         let item = CustomerMeasurement(
                             customerName: customer.name,
                             title: title,
-                            width: Double(width) ?? 0,
-                            height: Double(height) ?? 0,
+                            width: (Double(width) ?? 0) / 1000,
+                            height: (Double(height) ?? 0) / 1000,
                             quantity: Int(quantity) ?? 1,
                             rate: Double(rate) ?? 0
                         )
@@ -1025,7 +1025,7 @@ struct MeasurementView: View {
 
     private var sqft: Double {
         guard let w = Double(width), let h = Double(height), let q = Int(quantity) else { return 0 }
-        return w * h * Double(q)
+        return (w / 1000) * (h / 1000) * Double(q)
     }
 
     private var total: Double {
@@ -1039,10 +1039,10 @@ struct MeasurementView: View {
                 Section("কাজের তথ্য") {
                     TextField("কাস্টমারের নাম", text: $customerName)
                     TextField("Door / Window নাম", text: $title)
-                    TextField("Width (m)", text: $width)
-                        .keyboardType(.decimalPad)
-                    TextField("Height (m)", text: $height)
-                        .keyboardType(.decimalPad)
+                    TextField("WIDTH (mm)", text: $width)
+                        .keyboardType(.numberPad)
+                    TextField("HEIGHT (mm)", text: $height)
+                        .keyboardType(.numberPad)
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.numberPad)
                     Picker("Saved Rate", selection: $selectedRate) {
@@ -1094,8 +1094,8 @@ struct MeasurementView: View {
                         CustomerMeasurement(
                             customerName: name,
                             title: itemTitle,
-                            width: savedWidth,
-                            height: savedHeight,
+                            width: savedWidth / 1000,
+                            height: savedHeight / 1000,
                             quantity: savedQuantity,
                             rate: savedRate
                         )
@@ -1176,8 +1176,8 @@ struct EditMeasurementView: View {
         self.measurement = measurement
         _customerName = State(initialValue: measurement.customerName)
         _title = State(initialValue: measurement.title)
-        _width = State(initialValue: String(measurement.width))
-        _height = State(initialValue: String(measurement.height))
+        _width = State(initialValue: String(format: "%.0f", measurement.width * 1000))
+        _height = State(initialValue: String(format: "%.0f", measurement.height * 1000))
         _quantity = State(initialValue: String(measurement.quantity))
         _rate = State(initialValue: String(measurement.rate))
     }
@@ -1188,8 +1188,8 @@ struct EditMeasurementView: View {
                 Section("Measurement Edit") {
                     TextField("Customer name", text: $customerName)
                     TextField("Door / Window name", text: $title)
-                    TextField("Width (m)", text: $width).keyboardType(.decimalPad)
-                    TextField("Height (m)", text: $height).keyboardType(.decimalPad)
+                    TextField("WIDTH (mm)", text: $width).keyboardType(.numberPad)
+                    TextField("HEIGHT (mm)", text: $height).keyboardType(.numberPad)
                     TextField("Quantity", text: $quantity).keyboardType(.numberPad)
                     TextField("Rate / m² (Rs)", text: $rate).keyboardType(.decimalPad)
                 }
@@ -1232,8 +1232,8 @@ struct EditMeasurementView: View {
                 id: measurement.id,
                 customerName: name,
                 title: itemTitle,
-                width: savedWidth,
-                height: savedHeight,
+                width: savedWidth / 1000,
+                height: savedHeight / 1000,
                 quantity: savedQuantity,
                 rate: savedRate
             )
