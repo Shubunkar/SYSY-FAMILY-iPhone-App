@@ -788,7 +788,11 @@ struct CustomerMeasurementFlowView: View {
     @State private var showFullScreenSpreadsheet = false
 
     private var area: Double {
-        ((Double(width) ?? 0) / 1000) * ((Double(height) ?? 0) / 1000) * Double(Int(quantity) ?? 1)
+        let widthMetres: Double = (Double(width) ?? 0) / 1000.0
+        let heightMetres: Double = (Double(height) ?? 0) / 1000.0
+        let quantityValue: Double = Double(Int(quantity) ?? 1)
+        let singleArea: Double = widthMetres * heightMetres
+        return singleArea * quantityValue
     }
 
     private var amount: Double {
