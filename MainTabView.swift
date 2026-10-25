@@ -427,11 +427,11 @@ struct MeasurementSpreadsheetTable: View {
     var blankRowCount: Int = 0
 
     private let columns: [(String, CGFloat, Bool)] = [
-        ("REF", 142, true),
+        (".REF", 142, true),
         ("WIDTH mm", 84, false),
         ("HEIGHT mm", 84, false),
-        ("QTY", 48, false),
         ("TOTAL (M²)", 86, false),
+        ("PARSENT (%)", 88, false),
         ("RATE (Rs/m²)", 92, false),
         ("TOTAL (Rs)", 104, false),
         ("SAVE / EDIT", 90, false)
@@ -467,8 +467,8 @@ struct MeasurementSpreadsheetTable: View {
                         cell("", width: 142, leading: true)
                         cell("", width: 84)
                         cell("", width: 84)
-                        cell("", width: 48)
                         cell("", width: 86)
+                        cell("", width: 88)
                         cell("", width: 92)
                         cell("", width: 104)
                         cell("", width: 90)
@@ -479,8 +479,9 @@ struct MeasurementSpreadsheetTable: View {
                 }
 
                 HStack(spacing: 0) {
-                    cell("মোট", width: 358, header: true, leading: true)
+                    cell("মোট", width: 312, header: true, leading: true)
                     cell(String(format: "%.3f", measurements.reduce(0) { $0 + $1.squareMeters }), width: 86, header: true)
+                    cell("—", width: 88, header: true)
                     cell("—", width: 92, header: true)
                     cell(formatAmount(measurements.reduce(0) { $0 + $1.amount }), width: 104, header: true)
                     cell("", width: 90, header: true)
@@ -641,6 +642,7 @@ private struct MeasurementSpreadsheetRow: View {
     @State private var width: String
     @State private var height: String
     @State private var quantity: String
+    @State private var percentage: String
     @State private var rate: String
 
     init(measurement: CustomerMeasurement, onSave: @escaping (CustomerMeasurement) -> Void, onEdit: @escaping (CustomerMeasurement) -> Void, onDelete: ((CustomerMeasurement) -> Void)?, isEditing: Bool = false) {
@@ -653,6 +655,7 @@ private struct MeasurementSpreadsheetRow: View {
         _width = State(initialValue: String(format: "%.0f", measurement.width * 1000))
         _height = State(initialValue: String(format: "%.0f", measurement.height * 1000))
         _quantity = State(initialValue: String(measurement.quantity))
+        _percentage = State(initialValue: String(format: "%.0f", measurement.percentage))
         _rate = State(initialValue: String(format: "%.2f", measurement.rate))
     }
 
@@ -669,16 +672,16 @@ private struct MeasurementSpreadsheetRow: View {
             field($title, width: 142, leading: true)
             field($width, width: 84, numeric: true, wholeNumber: true)
             field($height, width: 84, numeric: true, wholeNumber: true)
-            field($quantity, width: 48, numeric: true, wholeNumber: true)
             Text(String(format: "%.3f", calculatedArea))
                 .font(.system(size: 11))
                 .frame(width: 86).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
+            field($percentage, width: 88, numeric: true, wholeNumber: true)
             Text(formatAmount(Double(rate) ?? 0))
                 .font(.system(size: 11))
                 .frame(width: 92).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
-            Text(formatAmount(calculatedAmount))
+            Text(formatAmount(calculatedAmount * min(100, max(0, Double(percentage) ?? 100)) / 100))
                 .font(.system(size: 11, weight: .semibold))
                 .frame(width: 104).frame(minHeight: 42, alignment: .trailing)
                 .padding(.horizontal, 6)
@@ -693,6 +696,7 @@ private struct MeasurementSpreadsheetRow: View {
                         height: (Double(height) ?? (measurement.height * 1000)) / 1000,
                         quantity: Int(quantity) ?? measurement.quantity,
                         rate: Double(rate) ?? measurement.rate,
+                        percentage: Double(percentage) ?? measurement.percentage,
                         unit: measurement.unit
                     )
                     onSave(updated)
@@ -1664,7 +1668,9 @@ struct PDFShareSheet: UIViewControllerRepresentable {
                 spacingAfter: 3
             )
             drawText("Aluminium Door & Window Solutions", font: .systemFont(ofSize: 12), spacingAfter: 3)
-            drawText("Mobile: +230 5890 9358", font: .systemFont(ofSize: 11), color: UIColor.darkGray, spacingAfter: 12)
+            drawText("Mobile: +230 5890 9358", font: .systemFont(ofSize: 11), color: UIColor.darkGray, spacingAfter: 3)
+            drawText("Email: Shubunkarsutradhar@gmail.com", font: .systemFont(ofSize: 10), color: UIColor.darkGray, spacingAfter: 3)
+            drawText("Professional aluminium door/window installation, precise measurement, expert fixing and neat finishing.", font: .italicSystemFont(ofSize: 9), color: UIColor.darkGray, spacingAfter: 10)
             drawRule()
 
             drawText("QUOTATION", font: .boldSystemFont(ofSize: 20), spacingAfter: 5)
