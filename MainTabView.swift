@@ -664,7 +664,9 @@ private struct MeasurementSpreadsheetRow: View {
         (Double(width) ?? 0) > 0 &&
         (Double(height) ?? 0) > 0 &&
         (Int(quantity) ?? 0) > 0 &&
-        (Double(rate) ?? -1) >= 0
+        (Double(rate) ?? -1) >= 0 &&
+        (Double(percentage) ?? -1) >= 0 &&
+        (Double(percentage) ?? 101) <= 100
     }
 
     var body: some View {
@@ -786,7 +788,7 @@ struct CustomerMeasurementFlowView: View {
     @State private var showFullScreenSpreadsheet = false
 
     private var area: Double {
-        (Double(width) ?? 0) * (Double(height) ?? 0) * Double(Int(quantity) ?? 1)
+        ((Double(width) ?? 0) / 1000) * ((Double(height) ?? 0) / 1000) * Double(Int(quantity) ?? 1)
     }
 
     private var amount: Double {
@@ -1702,6 +1704,7 @@ struct PDFShareSheet: UIViewControllerRepresentable {
             y += 5
             drawRule()
             drawText("WORK DETAILS", font: .boldSystemFont(ofSize: 11), color: UIColor.systemBlue, spacingAfter: 6)
+            drawText("Services: Aluminium doors and windows • Sliding/folding doors • Glass partitions • Shower enclosures • Balcony glass and balustrades • Repair and fixing.", font: .systemFont(ofSize: 9), color: UIColor.darkGray, spacingAfter: 8)
 
             for line in quotation.lines {
                 drawText(line.title, font: .boldSystemFont(ofSize: 12), spacingAfter: 2)
