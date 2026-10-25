@@ -506,6 +506,8 @@ struct CustomerMeasurement: Identifiable, Codable {
     var quantity: Int
     /// Rate per square metre for current records.
     var rate: Double
+    /// Percentage of this row's amount to bill at the current work stage (backward-compatible default: 100%).
+    var percentage: Double
     /// Missing unit means a legacy V63 record (feet and rate per square foot).
     var unit: String
 
@@ -517,6 +519,7 @@ struct CustomerMeasurement: Identifiable, Codable {
         height: Double,
         quantity: Int,
         rate: Double,
+        percentage: Double = 100,
         unit: String = "m"
     ) {
         self.id = id
@@ -526,11 +529,12 @@ struct CustomerMeasurement: Identifiable, Codable {
         self.height = height
         self.quantity = quantity
         self.rate = rate
+        self.percentage = min(100, max(0, percentage))
         self.unit = unit
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, customerName, title, width, height, quantity, rate, unit
+        case id, customerName, title, width, height, quantity, rate, percentage, unit
     }
 
     init(from decoder: Decoder) throws {
@@ -542,6 +546,7 @@ struct CustomerMeasurement: Identifiable, Codable {
         height = try values.decode(Double.self, forKey: .height)
         quantity = try values.decode(Int.self, forKey: .quantity)
         rate = try values.decode(Double.self, forKey: .rate)
+        percentage = min(100, max(0, try values.decodeIfPresent(Double.self, forKey: .percentage) ?? 100))
         unit = try values.decodeIfPresent(String.self, forKey: .unit) ?? "ft"
     }
 
@@ -559,5 +564,8 @@ struct CustomerMeasurement: Identifiable, Codable {
             ? width * height * Double(quantity) * rate
             : squareMeters * rate
     }
+
+    /// Amount payable at this row's selected percentage.
+    var percentageAmount: Double { amount * percentage / 100 }
 }
 ```
