@@ -3890,7 +3890,17 @@ struct SettingsView: View {
                         Label("ভাষা / Language", systemImage: "globe")
                     }
                 }
-                Section {
+                Section(selectedLanguage == "en" ? "Contact" : "যোগাযোগ") {
+                    HStack {
+                        Label("Email", systemImage: "envelope.fill")
+                        Spacer()
+                        Text("Shubunkarsutradhar@gmail.com")
+                            .font(.footnote)
+                            .textSelection(.enabled)
+                    }
+                    Link(destination: URL(string: "mailto:Shubunkarsutradhar@gmail.com")!) {
+                        Label(selectedLanguage == "en" ? "Email SYSY FAMILY" : "ইমেইল পাঠান", systemImage: "paperplane.fill")
+                    }
                     Label("সাহায্য ও সাপোর্ট", systemImage: "questionmark.circle")
                     Label("অ্যাপ সম্পর্কে", systemImage: "info.circle")
                 }
