@@ -81,8 +81,11 @@ struct SYSYLogoView: View {
 struct ProfileAvatar: View {
     var size: CGFloat = 58
     var body: some View {
-        SYSYLogoView()
+        Image(uiImage: UIImage(contentsOfFile: Bundle.main.path(forResource: "profile", ofType: "jpg") ?? "") ?? UIImage())
+            .resizable()
+            .scaledToFill()
             .frame(width: size, height: size)
+            .clipShape(Circle())
             .clipShape(Circle())
             .overlay(Circle().stroke(Color.sysyGold, lineWidth: 2))
             .shadow(color: Color.sysyNavy.opacity(0.18), radius: 5, y: 2)
@@ -99,9 +102,13 @@ struct LaunchSplashView: View {
                 endPoint: .bottomTrailing
             )
             VStack(spacing: 18) {
-                SYSYLogoView()
-                    .frame(width: 150, height: 150)
-                    .shadow(color: Color.sysyGold.opacity(0.28), radius: 18, y: 8)
+                Image(uiImage: UIImage(contentsOfFile: Bundle.main.path(forResource: "profile", ofType: "jpg") ?? "") ?? UIImage())
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 156, height: 156)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.sysyGold, lineWidth: 4))
+                    .shadow(color: Color.sysyGold.opacity(0.30), radius: 18, y: 8)
                 Text("SYSY FAMILY")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .tracking(1.5)
