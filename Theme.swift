@@ -80,12 +80,21 @@ struct SYSYLogoView: View {
 
 struct ProfileAvatar: View {
     var size: CGFloat = 58
+    @AppStorage("SYSY_FAMILY_PROFILE_PHOTO") private var profilePhotoBase64 = ""
+
+    private var avatarImage: UIImage {
+        if let data = Data(base64Encoded: profilePhotoBase64),
+           let image = UIImage(data: data) {
+            return image
+        }
+        return UIImage(contentsOfFile: Bundle.main.path(forResource: "profile", ofType: "jpg") ?? "") ?? UIImage()
+    }
+
     var body: some View {
-        Image(uiImage: UIImage(contentsOfFile: Bundle.main.path(forResource: "profile", ofType: "jpg") ?? "") ?? UIImage())
+        Image(uiImage: avatarImage)
             .resizable()
             .scaledToFill()
             .frame(width: size, height: size)
-            .clipShape(Circle())
             .clipShape(Circle())
             .overlay(Circle().stroke(Color.sysyGold, lineWidth: 2))
             .shadow(color: Color.sysyNavy.opacity(0.18), radius: 5, y: 2)
