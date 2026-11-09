@@ -2613,7 +2613,8 @@ struct CustomerSummaryPDFShareSheet: UIViewControllerRepresentable {
                 drawSYSYLogo(in: CGRect(x: page.width - margin - 58, y: y, width: 50, height: 58))
                 draw("SYSY FAMILY", size: 22, bold: true, color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1), gap: 2)
                 draw("Aluminium Door & Window Solutions", size: 11, gap: 2)
-                draw("Mobile: +230 5890 9358", size: 10, color: .darkGray, gap: 10)
+                draw("Mobile: +230 5890 9358", size: 10, color: .darkGray, gap: 2)
+                draw("Email: Shubunkarsutradhar@gmail.com", size: 9, color: .darkGray, gap: 8)
                 y += 2
             }
 
@@ -3081,15 +3082,16 @@ struct PaymentReceiptPDFShareSheet: UIViewControllerRepresentable {
             draw("SYSY FAMILY", size: 24, bold: true, color: UIColor(red: 0.02, green: 0.08, blue: 0.18, alpha: 1), y: margin)
             draw("Aluminium Door & Window Solutions", size: 12, y: margin + 34)
             draw("Mobile: +230 5890 9358", size: 11, color: .darkGray, y: margin + 54)
+            draw("Email: Shubunkarsutradhar@gmail.com", size: 10, color: .darkGray, y: margin + 73)
 
             let line = UIBezierPath()
-            line.move(to: CGPoint(x: margin, y: margin + 82))
-            line.addLine(to: CGPoint(x: page.width - margin, y: margin + 82))
+            line.move(to: CGPoint(x: margin, y: margin + 98))
+            line.addLine(to: CGPoint(x: page.width - margin, y: margin + 98))
             UIColor.separator.setStroke()
             line.stroke()
 
-            draw("PAYMENT RECEIPT", size: 20, bold: true, y: margin + 105)
-            draw("Receipt date: \(payment.date.formatted(date: .long, time: .shortened))", y: margin + 145)
+            draw("PAYMENT RECEIPT", size: 20, bold: true, y: margin + 120)
+            draw("Receipt date: \(payment.date.formatted(date: .long, time: .shortened))", y: margin + 160)
             draw("Received from: \(payment.customerName)", size: 14, bold: true, y: margin + 180)
             draw("Amount received: MUR \(formatAmount(payment.amount))", size: 18, bold: true, color: UIColor.systemGreen, y: margin + 220)
             draw("Payment note: \(payment.note.isEmpty ? "—" : payment.note)", y: margin + 260)
