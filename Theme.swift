@@ -6,6 +6,8 @@ extension Color {
     static let sysyBlue = Color(red: 0.04, green: 0.22, blue: 0.40)
     static let sysyCream = Color(red: 1.00, green: 0.98, blue: 0.93)
     static let sysyGoldLight = Color(red: 1.00, green: 0.88, blue: 0.56)
+    static let sysyGreen = Color(red: 0.08, green: 0.55, blue: 0.39)
+    static let sysyPurple = Color(red: 0.39, green: 0.25, blue: 0.68)
 }
 
 struct AppCard<Content: View>: View {
@@ -104,9 +106,12 @@ struct LaunchSplashView: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .tracking(1.5)
                     .foregroundStyle(.white)
-                Text("Aluminium Doors & Windows")
+                Text("Build Better... Live Better...")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.sysyGoldLight)
+                Text("Aluminium Doors & Windows")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.78))
             }
             .padding(24)
         }
