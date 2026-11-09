@@ -44,7 +44,7 @@ jobs:
           cp "profile.jpg" "Generated/SYSY FAMILY/"
 
           # Create a polished square iPhone Home Screen icon from the owner's portrait.
-          python3 -m pip install --quiet Pillow
+          python3 -m pip install --quiet --break-system-packages Pillow
           mkdir -p "Generated/SYSY FAMILY/Assets.xcassets/AppIcon.appiconset"
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageOps, ImageFont
