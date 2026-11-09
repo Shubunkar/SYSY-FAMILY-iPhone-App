@@ -43,6 +43,57 @@ jobs:
           # Bundle the owner's portrait JPEG directly as an app resource.
           cp "profile.jpg" "Generated/SYSY FAMILY/"
 
+          # Create a polished square iPhone Home Screen icon from the owner's portrait.
+          python3 -m pip install --quiet Pillow
+          mkdir -p "Generated/SYSY FAMILY/Assets.xcassets/AppIcon.appiconset"
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageOps, ImageFont
+          from pathlib import Path
+
+          size = 1024
+          navy = (4, 20, 43, 255)
+          gold = (232, 176, 61, 255)
+          canvas = Image.new("RGBA", (size, size), navy)
+          source = Image.open("profile.jpg").convert("RGB")
+          portrait_size = 760
+          portrait = ImageOps.fit(source, (portrait_size, portrait_size), centering=(0.5, 0.34))
+          mask = Image.new("L", (portrait_size, portrait_size), 0)
+          ImageDraw.Draw(mask).ellipse((0, 0, portrait_size - 1, portrait_size - 1), fill=255)
+          x = (size - portrait_size) // 2
+          y = 66
+          canvas.paste(portrait, (x, y), mask)
+          draw = ImageDraw.Draw(canvas)
+          draw.ellipse((x - 15, y - 15, x + portrait_size + 14, y + portrait_size + 14),
+                       outline=gold, width=20)
+          font_path = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+          try:
+              font = ImageFont.truetype(font_path, 92)
+          except OSError:
+              font = ImageFont.load_default()
+          label = "SYSY FAMILY"
+          bounds = draw.textbbox((0, 0), label, font=font)
+          text_x = (size - (bounds[2] - bounds[0])) // 2
+          draw.text((text_x, 865), label, font=font, fill=gold)
+          canvas.convert("RGB").save("Generated/SYSY FAMILY/Assets.xcassets/AppIcon.appiconset/AppIcon.png",
+                                     format="PNG", optimize=True)
+          PY
+          cat > "Generated/SYSY FAMILY/Assets.xcassets/AppIcon.appiconset/Contents.json" <<'EOF'
+          {
+            "images" : [
+              {
+                "filename" : "AppIcon.png",
+                "idiom" : "universal",
+                "platform" : "ios",
+                "size" : "1024x1024"
+              }
+            ],
+            "info" : {
+              "author" : "xcode",
+              "version" : 1
+            }
+          }
+          EOF
+
           sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
           sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
 
@@ -114,6 +165,7 @@ jobs:
                 base:
                   PRODUCT_BUNDLE_IDENTIFIER: com.sysyfamily.aluminium
                   PRODUCT_NAME: "SYSY FAMILY"
+                  ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
                   SWIFT_VERSION: "5.0"
                   IPHONEOS_DEPLOYMENT_TARGET: "17.0"
                   TARGETED_DEVICE_FAMILY: "1"
