@@ -40,8 +40,8 @@ jobs:
           cp "Theme.swift" "Generated/SYSY FAMILY/"
           cp "MainTabView.swift" "Generated/SYSY FAMILY/"
 
-          # App branding is drawn in SwiftUI; skip the incomplete legacy asset catalog
-          # (it has no AppIcon set and causes actool to fail).
+          # Bundle the owner's portrait JPEG directly as an app resource.
+          cp "profile.jpg" "Generated/SYSY FAMILY/"
 
           sed -i '' '/^```swift[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
           sed -i '' '/^```[[:space:]]*$/d' "Generated/SYSY FAMILY/Models.swift"
