@@ -3871,19 +3871,24 @@ struct SiteListView: View {
 
 struct SettingsView: View {
     @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
+    @AppStorage("SYSY_FAMILY_PROFILE_NAME") private var profileName = "Shubunkar Sutradhar"
 
     var body: some View {
         SYSYNavigationStack {
             List {
                 Section {
-                    HStack {
-                        ProfileAvatar(size: 64)
-                        VStack(alignment: .leading) {
-                            Text("Sobunkur Sotrothdar").font(.headline)
-                            Text("SYSY FAMILY").font(.subheadline)
+                    NavigationLink(destination: ProfileEditView()) {
+                        HStack {
+                            ProfileAvatar(size: 64)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(profileName).font(.headline)
+                                Text("SYSY FAMILY").font(.subheadline)
+                                Text(selectedLanguage == "en" ? "Edit name and photo" : "নাম ও ছবি পরিবর্তন করুন")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                         }
+                        .padding(.vertical, 6)
                     }
-                    .padding(.vertical, 6)
                 }
                 Section("Business") {
                     NavigationLink(destination: GlobalSearchView()) {
@@ -3896,7 +3901,9 @@ struct SettingsView: View {
                         Label("Rate List — নিজে Edit করুন", systemImage: "list.number")
                     }
                     Label("ব্যবসার তথ্য", systemImage: "building.2")
-                    Label("Profile & Branding", systemImage: "person.crop.circle")
+                    NavigationLink(destination: ProfileEditView()) {
+                        Label("Profile & Branding", systemImage: "person.crop.circle")
+                    }
                     NavigationLink(destination: PaymentTrackingView()) {
                         Label("Payment Tracking", systemImage: "creditcard")
                     }
@@ -3931,5 +3938,76 @@ struct SettingsView: View {
             .navigationTitle(selectedLanguage == "en" ? "More" : "আরও")
         }
         .environment(\.locale, Locale(identifier: selectedLanguage))
+    }
+}
+
+struct ProfileEditView: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("SYSY_FAMILY_PROFILE_NAME") private var profileName = "Shubunkar Sutradhar"
+    @AppStorage("SYSY_FAMILY_PROFILE_PHOTO") private var profilePhotoBase64 = ""
+    @AppStorage("SYSY_FAMILY_LANGUAGE") private var selectedLanguage = "bn"
+    @State private var selectedPhoto: PhotosPickerItem?
+
+    private var previewImage: UIImage? {
+        guard let data = Data(base64Encoded: profilePhotoBase64) else { return nil }
+        return UIImage(data: data)
+    }
+
+    var body: some View {
+        Form {
+            Section(selectedLanguage == "en" ? "Profile photo" : "প্রোফাইল ছবি") {
+                VStack(spacing: 14) {
+                    Group {
+                        if let previewImage {
+                            Image(uiImage: previewImage).resizable().scaledToFill()
+                        } else {
+                            ProfileAvatar(size: 132)
+                        }
+                    }
+                    .frame(width: 132, height: 132)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.sysyGold, lineWidth: 4))
+
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label(selectedLanguage == "en" ? "Choose photo" : "ছবি নির্বাচন করুন", systemImage: "photo")
+                            .font(.headline)
+                            .foregroundStyle(Color.sysyNavy)
+                    }
+                    .onChange(of: selectedPhoto) { _, newValue in
+                        guard let newValue else { return }
+                        Task {
+                            if let data = try? await newValue.loadTransferable(type: Data.self),
+                               let image = UIImage(data: data),
+                               let jpeg = image.jpegData(compressionQuality: 0.88) {
+                                profilePhotoBase64 = jpeg.base64EncodedString()
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+            }
+
+            Section(selectedLanguage == "en" ? "Display name" : "প্রোফাইলের নাম") {
+                TextField(selectedLanguage == "en" ? "Your name" : "আপনার নাম", text: $profileName)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+            }
+
+            Section {
+                Button {
+                    let cleaned = profileName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !cleaned.isEmpty { profileName = cleaned }
+                    dismiss()
+                } label: {
+                    Label(selectedLanguage == "en" ? "Save Changes" : "পরিবর্তন সংরক্ষণ করুন", systemImage: "checkmark.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .font(.headline)
+                .foregroundStyle(Color.sysyNavy)
+            }
+        }
+        .navigationTitle(selectedLanguage == "en" ? "Edit Profile" : "প্রোফাইল Edit")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
