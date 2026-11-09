@@ -141,10 +141,10 @@ struct DashboardView: View {
                     }
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                        StatCard(title: "Customer", value: "\(store.data.customers.count)", icon: "person.2.fill")
-                        StatCard(title: "Quotation", value: "\(store.data.quotations.count)", icon: "doc.text.fill")
-                        StatCard(title: "Collection", value: "MUR \(formatAmount(store.totalCollected))", icon: "banknote")
-                        StatCard(title: "পাওনা", value: "MUR \(formatAmount(store.totalDue))", icon: "exclamationmark.circle")
+                        StatCard(title: "Customer", value: "\(store.data.customers.count)", icon: "person.2.fill", tint: .sysyBlue)
+                        StatCard(title: "Quotation", value: "\(store.data.quotations.count)", icon: "doc.text.fill", tint: .sysyGold)
+                        StatCard(title: "Collection", value: "MUR \(formatAmount(store.totalCollected))", icon: "banknote", tint: .sysyGreen)
+                        StatCard(title: "পাওনা", value: "MUR \(formatAmount(store.totalDue))", icon: "exclamationmark.circle", tint: .sysyPurple)
                     }
 
                     AppCard {
@@ -235,16 +235,37 @@ struct StatCard: View {
     let title: String
     let value: String
     let icon: String
+    var tint: Color = .sysyBlue
+
     var body: some View {
-        AppCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Image(systemName: icon)
-                    .foregroundStyle(Color.sysyGold)
-                Text(title).font(.caption).foregroundStyle(.secondary)
-                Text(value).font(.title3.bold()).foregroundStyle(Color.sysyNavy)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: icon)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.96))
+            Text(title)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.white.opacity(0.88))
+            Text(value)
+                .font(.title3.bold())
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
         }
+        .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
+        .padding(14)
+        .background(
+            LinearGradient(
+                colors: [tint.opacity(0.78), tint],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.22), lineWidth: 1)
+        )
+        .shadow(color: tint.opacity(0.24), radius: 9, y: 4)
     }
 }
 
